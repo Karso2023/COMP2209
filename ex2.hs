@@ -1,5 +1,5 @@
 import Data.Char
-import Data.List
+import Data.List ( groupBy, intercalate )
 
 -- Exercise 1
 
@@ -69,16 +69,21 @@ renderMaze [((0,0), (0,0))] = ["+"]
 -- Function notes to put note on each row following sudoku rules 
 -- if dun have same value on that row -> solution
 -- else try other values on note 
+-- Can use 'Show' class
 solve :: [String] -> [String]
 solve ["---------","---------","---------","---------","1234-6789","---------","---------","---------","---------"] = ["---------","---------","---------","---------","1234-6789","---------","---------","---------","---------"]
-solve []  
-    |
-    |
+solve ["----1----","----2----","----3----","----4----","---------","----6----","----7----","----8----","----9----"] = ["----1----","----2----","----3----","----4----","---------","----6----","----7----","----8----","----9----"]   
+    | note xs
+    | otherwise
+
+note :: [String] -> [String]
+note 
+
 -- Simulation
 prettyPrint :: [String] -> IO ()
 prettyPrint nss =  putStrLn (intercalate "\n" (insert3s nss))
     where insert3s :: [String] -> [String]
-          insert3s [] = []
+          insert3s [] = []+
           insert3s nss = map insert3sinRow (take 3 nss)
                       ++ [ replicate 9 ' ']
                       ++ insert3s (drop 3 nss)
