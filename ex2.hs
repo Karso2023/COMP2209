@@ -66,6 +66,10 @@ renderMaze [] = []
 renderMaze [((0,0), (0,0))] = ["+"]
 
 -- Assessed Exercises A3
+solve :: [String] → [String]
+solve ["---------","---------","---------","---------","1234-6789","---------","---------","---------","---------"] = 
+
+-- Simulation
 prettyPrint :: [String] -> IO ()
 prettyPrint nss =  putStrLn (intercalate "\n" (insert3s nss))
     where insert3s :: [String] -> [String]
