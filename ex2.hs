@@ -66,9 +66,14 @@ renderMaze [] = []
 renderMaze [((0,0), (0,0))] = ["+"]
 
 -- Assessed Exercises A3
-solve :: [String] → [String]
-solve ["---------","---------","---------","---------","1234-6789","---------","---------","---------","---------"] = 
-
+-- Function notes to put note on each row following sudoku rules 
+-- if dun have same value on that row -> solution
+-- else try other values on note 
+solve :: [String] -> [String]
+solve ["---------","---------","---------","---------","1234-6789","---------","---------","---------","---------"] = ["---------","---------","---------","---------","1234-6789","---------","---------","---------","---------"]
+solve []  
+    |
+    |
 -- Simulation
 prettyPrint :: [String] -> IO ()
 prettyPrint nss =  putStrLn (intercalate "\n" (insert3s nss))
@@ -82,3 +87,5 @@ prettyPrint nss =  putStrLn (intercalate "\n" (insert3s nss))
                                   ++ [' ']
                                   ++ insert3sinRow (drop 3 ns)
                     where pad c = [' ',c,' ']
+
+
