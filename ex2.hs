@@ -1,4 +1,5 @@
 import Data.Char
+import Data.List
 
 -- Exercise 1
 
@@ -12,7 +13,7 @@ safetail :: [a] -> [a]
 safetail xs | null xs = []
             | otherwise = tail xs
 
- where null xs = length xs == 0
+ where null xs = null xs
 
  -- Exercise 4
 halve :: [a] -> ([a],[a])
@@ -46,8 +47,8 @@ amSplit [] = []
 amSplit [a] = [[a]]
 amSplit xs
      | isSortedBoth xs = splitEvery 2 xs
-     | otherwise = [xs] 
-  
+     | otherwise = [xs]
+
 
 
 
@@ -62,3 +63,15 @@ renderMaze [] = []
 renderMaze [((0,0), (0,0))] = ["+"]
 
 -- Assessed Exercises A3
+prettyPrint :: [String] -> IO ()
+prettyPrint nss =  putStrLn (intercalate "\n" (insert3s nss))
+    where insert3s :: [String] -> [String]
+          insert3s [] = []
+          insert3s nss = map insert3sinRow (take 3 nss)
+                      ++ [ replicate 9 ' ']
+                      ++ insert3s (drop 3 nss)
+            where insert3sinRow "" = ""
+                  insert3sinRow ns = (take 3 ns >>= pad)
+                                  ++ [' ']
+                                  ++ insert3sinRow (drop 3 ns)
+                    where pad c = [' ',c,' ']
