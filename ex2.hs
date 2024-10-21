@@ -53,5 +53,12 @@ amSplit xs
 
 
 -- Assessed Exercises A2
+-- All paths run either horizontally (same y-value for both ends) ('-')
+-- or vertically (same x-value for both ends) ('|')
+-- A path of length 1 is considered to be both horizontal and vertical ('+')
+
+renderMaze :: [((Int, Int), (Int, Int))] -> [String]
+renderMaze [] = []
+renderMaze [((0,0), (0,0))] = ["+"]
 
 -- Assessed Exercises A3
