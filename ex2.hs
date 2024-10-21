@@ -66,31 +66,54 @@ renderMaze [] = []
 renderMaze [((0,0), (0,0))] = ["+"]
 
 -- Assessed Exercises A3
+-- Function replace to replace "-" to "0",
+-- then use map (read::String->Int) to change the list from String to Int 
 -- Function notes to put note on each row following sudoku rules 
 -- if dun have same value on that row -> solution
 -- else try other values on note 
 -- Can use 'Show' class
-solve :: [String] -> [String]
-solve ["---------","---------","---------","---------","1234-6789","---------","---------","---------","---------"] = ["---------","---------","---------","---------","1234-6789","---------","---------","---------","---------"]
-solve ["----1----","----2----","----3----","----4----","---------","----6----","----7----","----8----","----9----"] = ["----1----","----2----","----3----","----4----","---------","----6----","----7----","----8----","----9----"]   
-    | note xs
-    | otherwise
+replaceChar :: Char -> Char
+replaceChar '-' = '0'
+replaceChar c   = c
 
-note :: [String] -> [String]
-note 
+replaceStrings :: [String] -> [String]
+replaceStrings = map (map replaceChar)
 
+stringsToInt :: [String] -> [Int]
+stringsToInt = map read . replaceStrings 
+
+-- note :: [Int] -> [String]
+-- note 
+
+-- solve :: [String] -> [String]
+-- solve ["---------","---------","---------","---------","1234-6789","---------","---------","---------","---------"] = ["---------","---------","---------","---------","1234-6789","---------","---------","---------","---------"]
+-- solve ["----1----","----2----","----3----","----4----","---------","----6----","----7----","----8----","----9----"] = ["----1----","----2----","----3----","----4----","---------","----6----","----7----","----8----","----9----"]   
+--     | note xs
+--     | otherwise
 -- Simulation
+-- prettyPrint :: [String] -> IO ()
+-- prettyPrint nss =  putStrLn (intercalate "\n" (insert3s nss))
+--     where insert3s :: [String] -> [String]
+--           insert3s [] = []+
+--           insert3s nss = map insert3sinRow (take 3 nss)
+--                       ++ [ replicate 9 ' ']
+--                       ++ insert3s (drop 3 nss)
+--             where insert3sinRow "" = ""
+--                   insert3sinRow ns = (take 3 ns >>= pad)
+--                                   ++ [' ']
+--                                   ++ insert3sinRow (drop 3 ns)
+--                     where pad c = [' ',c,' ']
 prettyPrint :: [String] -> IO ()
-prettyPrint nss =  putStrLn (intercalate "\n" (insert3s nss))
+prettyPrint nss =  putStrLn $ (intercalate "\n" (insert3s nss))
     where insert3s :: [String] -> [String]
-          insert3s [] = []+
-          insert3s nss = map insert3sinRow (take 3 nss)
-                      ++ [ replicate 9 ' ']
-                      ++ insert3s (drop 3 nss)
+          insert3s [] = []
+          insert3s nss = (map insert3sinRow (take 3 nss)) 
+                      ++ [ (replicate 9 ' ')]
+                      ++ (insert3s $ drop 3 nss)
             where insert3sinRow "" = ""
-                  insert3sinRow ns = (take 3 ns >>= pad)
+                  insert3sinRow ns = ((take 3 ns) >>= pad)
                                   ++ [' ']
-                                  ++ insert3sinRow (drop 3 ns)
+                                  ++ (insert3sinRow $ drop 3 ns)
                     where pad c = [' ',c,' ']
 
 
