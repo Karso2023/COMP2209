@@ -42,12 +42,15 @@ splitEvery n list = first : splitEvery n rest
   where
     (first,rest) = splitAt n list
 
+groupConsecutive :: [Int] -> [[Int]]
+groupConsecutive = groupBy (\x y -> y == x || y == x + 1)
+
 amSplit :: [Int] -> [[Int]]
 amSplit [] = []
 amSplit [a] = [[a]]
 amSplit xs
      | isSortedBoth xs = splitEvery 2 xs
-     | otherwise = [xs]
+     | otherwise = groupConsecutive xs
 
 
 
