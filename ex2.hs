@@ -69,6 +69,8 @@ renderMaze [((0,0), (0,0))] = ["+"]
 -- Function replace to replace "-" to "0",
 -- then use map (read::String->Int) to change the list from String to Int 
 -- Function notes to put note on each row following sudoku rules 
+-- row: check row by row, if only one 0 in that row, check value (1 ~ 9), the one that is not in the grid is the solution
+-- col: check col by col, if only one 0 in that col, check value (1 ~ 9), the one that is not in the grid is the solution   
 -- if dun have same value on that row -> solution
 -- else try other values on note 
 -- Can use 'Show' class
@@ -103,17 +105,5 @@ stringsToInt = map read . replaceStrings
 --                                   ++ [' ']
 --                                   ++ insert3sinRow (drop 3 ns)
 --                     where pad c = [' ',c,' ']
-prettyPrint :: [String] -> IO ()
-prettyPrint nss =  putStrLn $ (intercalate "\n" (insert3s nss))
-    where insert3s :: [String] -> [String]
-          insert3s [] = []
-          insert3s nss = (map insert3sinRow (take 3 nss)) 
-                      ++ [ (replicate 9 ' ')]
-                      ++ (insert3s $ drop 3 nss)
-            where insert3sinRow "" = ""
-                  insert3sinRow ns = ((take 3 ns) >>= pad)
-                                  ++ [' ']
-                                  ++ (insert3sinRow $ drop 3 ns)
-                    where pad c = [' ',c,' ']
 
 
