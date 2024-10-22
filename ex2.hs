@@ -1,5 +1,5 @@
 import Data.Char
-import Data.List ( groupBy, intercalate )
+import Data.List ( groupBy, intercalate, nub)
 
 -- Exercise 1
 
@@ -33,8 +33,8 @@ halve xs = splitAt (length xs `div` 2) xs
 isSortedBoth :: Ord a => [a] -> Bool
 isSortedBoth xs = length xs >= 3 && (isAscending xs || isDescending xs)
   where
-    isAscending ys = and (zipWith (<) ys (tail ys))
-    isDescending ys = and (zipWith (>) ys (tail ys))
+    isAscending ys = and (zipWith (<=) ys (tail ys))
+    isDescending ys = and (zipWith (>=) ys (tail ys))
 
 splitEvery :: Int -> [a] -> [[a]]
 splitEvery _ [] = []
@@ -43,14 +43,19 @@ splitEvery n list = first : splitEvery n rest
     (first,rest) = splitAt n list
 
 groupConsecutive :: [Int] -> [[Int]]
-groupConsecutive = groupBy (\x y -> y == x || y == x + 1)
+groupConsecutive = groupBy (\x y -> y == x || y == x + 1 || y == x - 1)
+
+isAntiMonotone :: Ord a => [a] -> Bool
+isAntiMonotone xs = all (\(a, b, c) -> (a <= b && b >= c) || (a >= b && b <= c)) $ zip3 xs (tail xs) (tail (tail xs))
 
 amSplit :: [Int] -> [[Int]]
 amSplit [] = []
 amSplit [a] = [[a]]
 amSplit xs
-     | isSortedBoth xs = splitEvery 2 xs
-     | otherwise = groupConsecutive xs
+    | isAntiMonotone xs = [xs]
+    | isSortedBoth xs = splitEvery 2 xs
+    | length xs >= 3 = groupConsecutive xs
+    | otherwise = [xs]
 
 
 
@@ -68,12 +73,9 @@ renderMaze [((0,0), (0,0))] = ["+"]
 -- Assessed Exercises A3
 -- Function replace to replace "-" to "0",
 -- then use map (read::String->Int) to change the list from String to Int 
--- Function notes to put note on each row following sudoku rules 
--- row: check row by row, if only one 0 in that row, check value (1 ~ 9), the one that is not in the grid is the solution
--- col: check col by col, if only one 0 in that col, check value (1 ~ 9), the one that is not in the grid is the solution   
--- if dun have same value on that row -> solution
--- else try other values on note 
--- Can use 'Show' class
+-- row: check row by row, if only one 0 in that row, check value (1 ~ 9), the one that is not in the grid is the solution, do it recursively 
+-- col: check col by col, if only one 0 in that col, check value (1 ~ 9), the one that is not in the grid is the solution, do it recursively
+-- Can use 'Show' class to convert Int to String 
 replaceChar :: Char -> Char
 replaceChar '-' = '0'
 replaceChar c   = c
@@ -84,8 +86,9 @@ replaceStrings = map (map replaceChar)
 stringsToInt :: [String] -> [Int]
 stringsToInt = map read . replaceStrings 
 
--- note :: [Int] -> [String]
--- note 
+-- rowFunc :: [Int] -> [Int]
+-- rowFunc xs = 
+-- colFunc :: [Int] -> [String] 
 
 -- solve :: [String] -> [String]
 -- solve ["---------","---------","---------","---------","1234-6789","---------","---------","---------","---------"] = ["---------","---------","---------","---------","1234-6789","---------","---------","---------","---------"]
