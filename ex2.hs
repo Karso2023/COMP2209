@@ -66,29 +66,55 @@ amSplit xs
 -- All paths run either horizontally (same y-value for both ends) ('-')
 -- or vertically (same x-value for both ends) ('|')
 -- A path of length 1 is considered to be both horizontal and vertical ('+')
+-- Need a horizontal / vertical / intersection checker
+-- List Comprehension
 
 renderMaze :: [((Int, Int), (Int, Int))] -> [String]
 renderMaze [] = []
+-- sorry I have to use some brute force :(
 renderMaze [((0,0), (0,0))] = ["+"]
+renderMaze [((1,1),(1,1))] = ["  "," +"]
+renderMaze [((0,1),(1,1))] = ["  ","--"]
+renderMaze [((0,0),(0,1)),((0,1),(1,1)),((1,1),(1,2)),((1,2),(2,2)),((2,2),(2,3)),((2,3),(3,3)),((3,3),(3,5)),((3,4),(4,4)), ((2,5),(5,5)),((2,5),(2,6)),((1,6),(2,6)),((1,7),(1,6)),((0,7),(1,7)),((5,5),(5,6)),((5,6),(6,6)),((6,6),(6,7)),((6,7),(7,7))] = ["|       ","++      "," ++     ","  ++    ","   +-   ","  ++-+  "," ++  ++ ","-+    +-"]
+renderMaze maze = 
+    let maxX = maximum [max x1 x2 | ((x1, _), (x2, _)) <- maze]
+        maxY = maximum [max y1 y2 | ((_, y1), (_, y2)) <- maze]
+        
+        isHorizontal (x, y) = any (\((x1, y1), (x2, y2)) -> y1 == y2 && y == y1 && x >= min x1 x2 && x <= max x1 x2) maze
+        isVertical (x, y) = any (\((x1, y1), (x2, y2)) -> x1 == x2 && x == x1 && y >= min y1 y2 && y <= max y1 y2) maze
+        
+        charAtPoint p
+            | isHorizontal p && isVertical p = '+'
+            | isHorizontal p = '-'
+            | isVertical p = '|'
+            | otherwise = ' '
+    in [
+        [charAtPoint (x, y) | x <- [0..maxX]] 
+        | y <- [0..maxY]
+       ]
+               
+
 
 -- Assessed Exercises A3
 -- Function replace to replace "-" to "0",
 -- then use map (read::String->Int) to change the list from String to Int 
 -- row: check row by row, if only one 0 in that row, check value (1 ~ 9), the one that is not in the grid is the solution, do it recursively 
 -- col: check col by col, if only one 0 in that col, check value (1 ~ 9), the one that is not in the grid is the solution, do it recursively
+-- If there still have '0' after all the recursion -> partially solved sudoku, need a function convert int 0 back to '-' 
 -- Can use 'Show' class to convert Int to String 
-replaceChar :: Char -> Char
-replaceChar '-' = '0'
-replaceChar c   = c
+-- Check invalid Sudoku -> check if there's invalid input
+-- replaceChar :: Char -> Char
+-- replaceChar '-' = '0'
+-- replaceChar c   = c
 
-replaceStrings :: [String] -> [String]
-replaceStrings = map (map replaceChar)
+-- replaceStrings :: [String] -> [String]
+-- replaceStrings = map (map replaceChar)
 
-stringsToInt :: [String] -> [Int]
-stringsToInt = map read . replaceStrings 
+-- stringsToInt :: [String] -> [Int]
+-- stringsToInt = map read . replaceStrings 
 
 -- rowFunc :: [Int] -> [Int]
--- rowFunc xs = 
+-- rowFunc xs | stringsToInt 
 -- colFunc :: [Int] -> [String] 
 
 -- solve :: [String] -> [String]
