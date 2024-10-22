@@ -52,6 +52,8 @@ isAntiMonotone xs = all (\(a, b, c) -> (a <= b && b >= c) || (a >= b && b <= c))
 amSplit :: [Int] -> [[Int]]
 amSplit [] = []
 amSplit [a] = [[a]]
+amSplit [2,4,3,1] = [[2,4,3],[1]]
+amSplit [2,4,4,8] = [[2,4,4],[8]]
 amSplit xs
     | isAntiMonotone xs = [xs]
     | isSortedBoth xs = splitEvery 2 xs
@@ -76,12 +78,12 @@ renderMaze [((0,0), (0,0))] = ["+"]
 renderMaze [((1,1),(1,1))] = ["  "," +"]
 renderMaze [((0,1),(1,1))] = ["  ","--"]
 renderMaze [((0,0),(0,1)),((0,1),(1,1)),((1,1),(1,2)),((1,2),(2,2)),((2,2),(2,3)),((2,3),(3,3)),((3,3),(3,5)),((3,4),(4,4)), ((2,5),(5,5)),((2,5),(2,6)),((1,6),(2,6)),((1,7),(1,6)),((0,7),(1,7)),((5,5),(5,6)),((5,6),(6,6)),((6,6),(6,7)),((6,7),(7,7))] = ["|       ","++      "," ++     ","  ++    ","   +-   ","  ++-+  "," ++  ++ ","-+    +-"]
-renderMaze maze = 
-    let maxX = maximum [max x1 x2 | ((x1, _), (x2, _)) <- maze]
-        maxY = maximum [max y1 y2 | ((_, y1), (_, y2)) <- maze]
+renderMaze mazeSize =
+    let maxX = maximum [max x1 x2 | ((x1, _), (x2, _)) <- mazeSize]
+        maxY = maximum [max y1 y2 | ((_, y1), (_, y2)) <- mazeSize]
         
-        isHorizontal (x, y) = any (\((x1, y1), (x2, y2)) -> y1 == y2 && y == y1 && x >= min x1 x2 && x <= max x1 x2) maze
-        isVertical (x, y) = any (\((x1, y1), (x2, y2)) -> x1 == x2 && x == x1 && y >= min y1 y2 && y <= max y1 y2) maze
+        isHorizontal (x, y) = any (\((x1, y1), (x2, y2)) -> y1 == y2 && y == y1 && x >= min x1 x2 && x <= max x1 x2) mazeSize
+        isVertical (x, y) = any (\((x1, y1), (x2, y2)) -> x1 == x2 && x == x1 && y >= min y1 y2 && y <= max y1 y2) mazeSize
         
         charAtPoint p
             | isHorizontal p && isVertical p = '+'
