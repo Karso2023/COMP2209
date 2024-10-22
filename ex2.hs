@@ -28,6 +28,7 @@ halve xs = splitAt (length xs `div` 2) xs
 -- Assessed Exercises A1
 -- group anti-monotone 
 -- anti-monotone if it has no contiguous monotone sublist with 3 distinct values
+-- create function isAntiMonotone to check whether a list is anti-monotone when it is not fully sorted
 -- Approach: if [Int] >= 3 and is sorted, then split it by following the anti-monotone rule
 
 isSortedBoth :: Ord a => [a] -> Bool
