@@ -1,6 +1,7 @@
 import Data.Char (digitToInt, isDigit)
 import Data.List ( groupBy, intercalate, nub, transpose,(\\), unfoldr, minimumBy)
 import Data.Function (on)
+import Data.Maybe(fromMaybe)
 
 -- Exercise 1
 
@@ -111,29 +112,9 @@ type Row  = [Cell]
 type Grid = [Row]
 
 solve :: [String] -> [String]
-solve input
-    | not (isCompleteSudoku input) = input  
-    | otherwise = maybe input gridToStrings (readGrid (concat input) >>= solveGrid)  
-
-isCompleteSudoku :: [String] -> Bool
-isCompleteSudoku input =
-    length input == 9 &&
-    all (\row -> length row == 9) input &&
-    (length . concatMap (filter isDigit) $ input) >= 17   
-
-
-solveGrid :: Grid -> Maybe Grid
-solveGrid grid
-    | isGridFilled grid = Just grid
-    | isGridInvalid grid = Nothing
-    | otherwise = case pruneGrid grid of
-        Nothing -> Nothing
-        Just prunedGrid
-            | prunedGrid == grid -> tryNextGrids prunedGrid
-            | otherwise -> solveGrid prunedGrid
+solve input = gridToStrings $ fromMaybe grid (pruneGrid grid)
   where
-    tryNextGrids g = let (g1, g2) = nextGrids g
-                     in solveGrid g1 <|> solveGrid g2
+    grid = fromMaybe (error "Invalid input") $ readGrid (concat input)
 
 readGrid :: String -> Maybe Grid
 readGrid s
@@ -143,15 +124,16 @@ readGrid s
     readCell '-' = Just $ Possible [1..9]
     readCell c
       | isDigit c && c > '0' = Just . Fixed . digitToInt $ c
-      | otherwise = Nothing
+      | otherwise            = Nothing
 
     splitIntoRows :: String -> [String]
-    splitIntoRows = takeWhile (not . null) . unfoldr (Just . splitAt 9)
+    splitIntoRows [] = []
+    splitIntoRows xs = take 9 xs : splitIntoRows (drop 9 xs)
 
 gridToStrings :: Grid -> [String]
 gridToStrings = map (map cellToChar)
   where
-    cellToChar (Fixed n) = head (show n)
+    cellToChar (Fixed n)   = head (show n)
     cellToChar (Possible _) = '-'
 
 pruneCells :: [Cell] -> Maybe [Cell]
@@ -166,15 +148,17 @@ pruneCells cells = traverse pruneCell cells
     pruneCell x = Just x
 
 subGridsToRows :: Grid -> Grid
-subGridsToRows = concatMap processThreeRows . groupsOf3
+subGridsToRows = concatMap processThreeRows . groupsOf3 
   where
-    groupsOf3 = takeWhile (not . null) . unfoldr (Just . splitAt 3)
+    groupsOf3 [] = []
+    groupsOf3 xs = take 3 xs : groupsOf3 (drop 3 xs)
 
     processThreeRows rows =
       let [r1, r2, r3] = map splitIntoThrees rows
       in zipWith3 (\a b c -> a ++ b ++ c) r1 r2 r3
 
-    splitIntoThrees = takeWhile (not . null) . unfoldr (Just . splitAt 3)
+    splitIntoThrees [] = []
+    splitIntoThrees xs = take 3 xs : splitIntoThrees (drop 3 xs)
 
 pruneGrid' :: Grid -> Maybe Grid
 pruneGrid' grid =
@@ -187,41 +171,14 @@ pruneGrid = fixM pruneGrid'
   where
     fixM f x = f x >>= \x' -> if x' == x then return x else fixM f x'
 
-nextGrids :: Grid -> (Grid, Grid)
-nextGrids grid =
-  let (i, first@(Fixed _), rest) =
-        fixCell
-        . minimumBy (compare `on` (possibilityCount . snd))
-        . filter (isPossible . snd)
-        . zip [0..]
-        . concat
-        $ grid
-  in (replace2D i first grid, replace2D i rest grid)
-  where
-    isPossible (Possible _) = True
-    isPossible _            = False
-
-    possibilityCount (Possible xs) = length xs
-    possibilityCount (Fixed _)     = 1
-
-    fixCell (i, Possible [x, y]) = (i, Fixed x, Fixed y)
-    fixCell (i, Possible (x:xs)) = (i, Fixed x, Possible xs)
-    fixCell _                    = error "Impossible case"
-
-replace2D :: Int -> a -> [[a]] -> [[a]]
-replace2D i v =
-  let (x, y) = (i `quot` 9, i `mod` 9) in replace x (replace y (const v))
-  where
-    replace p f xs = [if i == p then f x else x | (x, i) <- zip xs [0..]]
-
 isGridFilled :: Grid -> Bool
 isGridFilled grid = null [ () | Possible _ <- concat grid ]
 
 isGridInvalid :: Grid -> Bool
 isGridInvalid grid =
-  any isInvalidRow grid
-  || any isInvalidRow (transpose grid)
-  || any isInvalidRow (subGridsToRows grid)
+  any isInvalidRow grid ||
+  any isInvalidRow (transpose grid) ||
+  any isInvalidRow (subGridsToRows grid)
   where
     isInvalidRow row =
       let fixeds         = [x | Fixed x <- row]
@@ -230,14 +187,10 @@ isGridInvalid grid =
 
     hasDups l = hasDups' l []
 
-    hasDups' [] _ = False
+    hasDups' [] _     = False
     hasDups' (y:ys) xs
-      | y `elem` xs = True
-      | otherwise   = hasDups' ys (y:xs)
-
-(<|>) :: Maybe a -> Maybe a -> Maybe a
-Nothing <|> y = y
-x       <|> _ = x
+      | y `elem` xs   = True
+      | otherwise     = hasDups' ys (y:xs)
 -- Simulation
 -- prettyPrint :: [String] -> IO ()
 -- prettyPrint nss =  putStrLn (intercalate "\n" (insert3s nss))
