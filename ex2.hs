@@ -49,7 +49,7 @@ groupConsecutive :: [Int] -> [[Int]]
 groupConsecutive = groupBy (\x y -> y == x || y == x + 1 || y == x - 1)
 
 isAntiMonotone :: Ord a => [a] -> Bool
-isAntiMonotone xs = all (\(a, b, c) -> (a <= b && b >= c) || (a >= b && b <= c)) $ zip3 xs (tail xs) (tail (tail xs))
+isAntiMonotone xs = all (\(a, b, c) -> (a <= b && b >= c) || (a >= b && b <= c)) (zip3 xs (tail xs) (tail (tail xs)))
 
 amSplit :: [Int] -> [[Int]]
 amSplit [] = []
@@ -158,10 +158,18 @@ chunksOf :: Int -> [a] -> [[a]]
 chunksOf n = unfoldr (\xs -> if null xs then Nothing else Just (splitAt n xs))
 
 pruneGrid' :: Grid -> Maybe Grid
-pruneGrid' grid =
-  traverse pruneCells grid
-  >>= fmap transpose . traverse pruneCells . transpose
-  >>= fmap subGridsToRows . traverse pruneCells . subGridsToRows
+pruneGrid' grid = do
+  prunedRows <- traverse pruneCells grid
+  
+  let transposed = transpose prunedRows
+  prunedCols <- traverse pruneCells transposed
+  let prunedColsAndRows = transpose prunedCols
+  
+  let subgrids = subGridsToRows prunedColsAndRows
+  prunedSubgrids <- traverse pruneCells subgrids
+  let result = subGridsToRows prunedSubgrids
+  
+  return result
 
 pruneGrid :: Grid -> Maybe Grid
 pruneGrid = fixM pruneGrid'
