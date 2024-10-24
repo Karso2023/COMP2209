@@ -15,7 +15,7 @@ safetail :: [a] -> [a]
 safetail xs | null xs = []
             | otherwise = tail xs
 
- where null xs = null xs
+ where null = null
 
  -- Exercise 4
 halve :: [a] -> ([a],[a])
@@ -156,15 +156,15 @@ chunksOf n = unfoldr (\xs -> if null xs then Nothing else Just (splitAt n xs))
 pruneGrid' :: Grid -> Maybe Grid
 pruneGrid' grid = do
   prunedRows <- traverse pruneCells grid
-  
+
   let transposed = transpose prunedRows
   prunedCols <- traverse pruneCells transposed
   let prunedColsAndRows = transpose prunedCols
-  
+
   let subgrids = subGridsToRows prunedColsAndRows
   prunedSubgrids <- traverse pruneCells subgrids
   let result = subGridsToRows prunedSubgrids
-  
+
   return result
 
 pruneGrid :: Grid -> Maybe Grid
