@@ -114,21 +114,20 @@ type Grid = [Row]
 solve :: [String] -> [String]
 solve input = gridToStrings $ fromMaybe grid (pruneGrid grid)
   where
-    grid = fromMaybe (error "Invalid input") $ readGrid (concat input)
+    grid = fromMaybe (error "Invalid input") ( readGrid (concat input))
 
 readGrid :: String -> Maybe Grid
 readGrid s
   | length s == 81 = traverse (traverse readCell) (splitIntoRows s)
   | otherwise      = Nothing
   where
-    readCell '-' = Just $ Possible [1..9]
+    readCell '-' = Just (Possible [1..9])
     readCell c
       | isDigit c && c > '0' = Just . Fixed . digitToInt $ c
       | otherwise            = Nothing
 
     splitIntoRows :: String -> [String]
-    splitIntoRows [] = []
-    splitIntoRows xs = take 9 xs : splitIntoRows (drop 9 xs)
+    splitIntoRows = unfoldr (\xs -> if null xs then Nothing else Just (splitAt 9 xs))
 
 gridToStrings :: Grid -> [String]
 gridToStrings = map (map cellToChar)
@@ -141,24 +140,22 @@ pruneCells cells = traverse pruneCell cells
   where
     fixeds = [x | Fixed x <- cells]
 
-    pruneCell (Possible xs) = case xs \\ fixeds of
-      []  -> Nothing
-      [y] -> Just $ Fixed y
-      ys  -> Just $ Possible ys
+    pruneCell (Possible xs) =
+      case xs \\ fixeds of
+        []  -> Nothing
+        [y] -> Just $ Fixed y
+        ys  -> Just $ Possible ys
     pruneCell x = Just x
 
 subGridsToRows :: Grid -> Grid
-subGridsToRows = concatMap processThreeRows . groupsOf3 
+subGridsToRows = concatMap processThreeRows . chunksOf 3
   where
-    groupsOf3 [] = []
-    groupsOf3 xs = take 3 xs : groupsOf3 (drop 3 xs)
-
     processThreeRows rows =
-      let [r1, r2, r3] = map splitIntoThrees rows
+      let [r1, r2, r3] = map (chunksOf 3) rows
       in zipWith3 (\a b c -> a ++ b ++ c) r1 r2 r3
 
-    splitIntoThrees [] = []
-    splitIntoThrees xs = take 3 xs : splitIntoThrees (drop 3 xs)
+chunksOf :: Int -> [a] -> [[a]]
+chunksOf n = unfoldr (\xs -> if null xs then Nothing else Just (splitAt n xs))
 
 pruneGrid' :: Grid -> Maybe Grid
 pruneGrid' grid =
@@ -172,7 +169,9 @@ pruneGrid = fixM pruneGrid'
     fixM f x = f x >>= \x' -> if x' == x then return x else fixM f x'
 
 isGridFilled :: Grid -> Bool
-isGridFilled grid = null [ () | Possible _ <- concat grid ]
+isGridFilled = all (all isFixed)
+  where isFixed (Fixed _) = True
+        isFixed _         = False
 
 isGridInvalid :: Grid -> Bool
 isGridInvalid grid =
@@ -182,15 +181,14 @@ isGridInvalid grid =
   where
     isInvalidRow row =
       let fixeds         = [x | Fixed x <- row]
-          emptyPossibles = [x | Possible x <- row, null x]
-      in hasDups fixeds || not (null emptyPossibles)
+          emptyPossibles = any null [x | Possible x <- row]
+      in hasDups fixeds || emptyPossibles
 
-    hasDups l = hasDups' l []
+    hasDups l = length l /= length (removeDuplicates l)
 
-    hasDups' [] _     = False
-    hasDups' (y:ys) xs
-      | y `elem` xs   = True
-      | otherwise     = hasDups' ys (y:xs)
+removeDuplicates :: Eq a => [a] -> [a]
+removeDuplicates []     = []
+removeDuplicates (x:xs) = x : removeDuplicates (filter (/= x) xs)
 -- Simulation
 -- prettyPrint :: [String] -> IO ()
 -- prettyPrint nss =  putStrLn (intercalate "\n" (insert3s nss))
