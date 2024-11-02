@@ -43,29 +43,24 @@ splitEvery :: Int -> [a] -> [[a]]
 splitEvery _ [] = []
 splitEvery n list = first : splitEvery n rest
   where
-    (first, rest) = splitAt n list
+    (first,rest) = splitAt n list
 
 groupConsecutive :: [Int] -> [[Int]]
 groupConsecutive = groupBy (\x y -> y == x || y == x + 1 || y == x - 1)
 
 isAntiMonotone :: Ord a => [a] -> Bool
-isAntiMonotone xs = all (\(a, b, c) -> (a <= b && b >= c) || (a >= b && b <= c)) $ zip3 xs (tail xs) (tail (tail xs))
+isAntiMonotone xs = all (\(a, b, c) -> (a <= b && b >= c) || (a >= b && b <= c)) (zip3 xs (tail xs) (tail (tail xs)))
 
 amSplit :: [Int] -> [[Int]]
 amSplit [] = []
 amSplit [a] = [[a]]
+
 amSplit xs
     | isAntiMonotone xs = [xs]
-    | isSortedBoth xs = go xs []  
+    | isSortedBoth xs = splitEvery 2 xs
     | length xs >= 3 = groupConsecutive xs
     | otherwise = [xs]
 
-go :: [Int] -> [Int] -> [[Int]]
-go [] acc = [acc]
-go [a] acc = [acc ++ [a]]
-go (a:b:c:rest) acc
-    | (a <= b && b <= c) || (a >= b && b >= c) = (acc ++ [a]) : go (b:c:rest) []
-    | otherwise = go (b:c:rest) (acc ++ [a])
 
 
 
