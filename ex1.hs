@@ -46,7 +46,7 @@ enc x = map (\ n -> chr (ord n + x))
 
 encrypt :: Int -> String -> (String, String -> String)
 encrypt n s = (enc n s, decrypt)
- where decrypt = enc (-n) 
+ where decrypt = enc (-n)
 
 -- Ex6
 meetsOffer :: String -> Int -> Bool
@@ -54,5 +54,11 @@ meetsOffer grades offer = sumGrades grades >= offer
    where sumGrades [] = 0
          sumGrades ('A':'*':grades) = 56 + sumGrades grades
          sumGrades (g:grades) | 'A' <= g && g <= 'E' = ((ord 'E' - ord g)+2)*8  + sumGrades grades
-                              | otherwise = sumGrades grades 
+                              | otherwise = sumGrades grades
                               -- | otheriwse = error "Input contains characters that don't represent A-level grades."
+
+-- Ex7
+luhnDouble :: Int -> Int
+luhnDouble n | m > 9 = m - 9
+             | otherwise = m 
+  where m = n * 2
