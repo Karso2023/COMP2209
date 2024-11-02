@@ -44,6 +44,10 @@ halve' xs = (take n xs , drop n xs)
 enc :: Int -> String -> String
 enc x = map (\ n -> chr (ord n + x))
 
+enc' :: Int -> String -> String
+enc' x [] = []
+enc' x (n:ns) = chr(ord n + x) : enc' x ns  
+
 --encrypt :: Int -> String -> (String, String -> String)
 
 
