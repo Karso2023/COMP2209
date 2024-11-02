@@ -1,3 +1,5 @@
+import Data.Char (chr, ord)
+
 -- Ex1
 last' :: [Int] -> Int
 last' xs = xs !! (length xs -1)
@@ -12,7 +14,7 @@ fourth = (!! 3)
 
 fourth' :: [a] -> a
 fourth' xs = head (tail (tail (tail xs)))
- 
+
 fourth'' :: [a] -> a
 fourth'' (_:_:_:n:_) = n
 
@@ -22,8 +24,27 @@ safetail xs = if null xs then [] else tail xs
 
 safetail' :: [a] -> [a]
 safetail' xs | null xs = []
-             | otherwise = tail xs 
+             | otherwise = tail xs
 
 safetail'' :: [a] -> [a]
 safetail'' [] = []
-safetail'' (_:xs) = xs 
+safetail'' (_:xs) = xs
+
+-- Ex4 
+halve :: [a] -> ([a],[a])
+halve [] = ([],[])
+halve xs = splitAt n xs
+  where n = length xs `div` 2
+
+halve' :: [a] -> ([a], [a])
+halve' xs = (take n xs , drop n xs)
+ where n = length xs `div` 2
+
+-- Ex5
+enc :: Int -> String -> String
+enc x = map (\ n -> chr (ord n + x))
+
+--encrypt :: Int -> String -> (String, String -> String)
+
+
+
