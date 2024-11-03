@@ -55,7 +55,7 @@ meetsOffer grades offer = sumGrades grades >= offer
          sumGrades ('A':'*':grades) = 56 + sumGrades grades
          sumGrades (g:grades) | 'A' <= g && g <= 'E' = ((ord 'E' - ord g)+2)*8  + sumGrades grades
                               | otherwise = sumGrades grades
-                              -- | otheriwse = error "Input contains characters that don't represent A-level grades."
+                              
 
 -- Ex7
 luhnDouble :: Int -> Int
