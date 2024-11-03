@@ -62,3 +62,7 @@ luhnDouble :: Int -> Int
 luhnDouble n | m > 9 = m - 9
              | otherwise = m 
   where m = n * 2
+
+luhn :: Int -> Int -> Int -> Int -> Bool
+luhn n1 n2 n3 n4 = 
+     (luhnDouble n1 + n2 + luhnDouble n3 + n4) `mod` 10 == 0
