@@ -1,6 +1,7 @@
 --
 -- PUT ANY IMPORT STATEMENTS HERE
 import Data.Char (ord)
+import Data.Ix (inRange)
 --
 
 --
@@ -25,7 +26,7 @@ type Loc = (Int, Int)
 
 -- Check if a location is within bounds
 withinBounds :: Loc -> Bool
-withinBounds (x, y) = x >= 0 && x < 8 && y >= 0 && y < 8
+withinBounds (x, y) = all (inRange (0, 7)) [x, y]
 
 -- Safe indexing to prevent negative index errors
 safeIndex :: [[a]] -> Int -> Int -> Maybe a
@@ -59,15 +60,15 @@ pawnMoves :: Board -> Colour -> Loc -> [Loc]
 pawnMoves board color (x, y) = filter withinBounds $
     case color of
         White ->
-            let moves = [(x, y - 1) | isEmpty board (x, y - 1)] -- Single step forward
+            let moves = [(x, y - 1) | isEmpty board (x, y - 1)] 
                 doubleMove = [(x, y - 2) | y == 6, isEmpty board (x, y - 1), isEmpty board (x, y - 2)]
-                captures = [(x - 1, y - 1), (x + 1, y - 1)] -- Diagonal captures
+                captures = [(x - 1, y - 1), (x + 1, y - 1)] 
             in moves ++ doubleMove ++ filter (not . isEmpty board) captures
 
         Black ->
-            let moves = [(x, y + 1) | isEmpty board (x, y + 1)] -- Single step forward
+            let moves = [(x, y + 1) | isEmpty board (x, y + 1)] 
                 doubleMove = [(x, y + 2) | y == 1, isEmpty board (x, y + 1), isEmpty board (x, y + 2)]
-                captures = [(x - 1, y + 1), (x + 1, y + 1)] -- Diagonal captures
+                captures = [(x - 1, y + 1), (x + 1, y + 1)] 
             in moves ++ doubleMove ++ filter (not . isEmpty board) captures
 
 -- Rook movement
