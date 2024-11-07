@@ -97,7 +97,7 @@ knightMoves board color (x, y) =
     filter withinBounds $
     [(x + dx, y + dy) | (dx, dy) <- [(2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)]]
 
--- Line moves for sliding pieces (rook, bishop, queen)
+-- Line moves for sliding pieces 
 lineMoves :: Board -> Colour -> Loc -> (Int, Int) -> [Loc]
 lineMoves board color (x, y) (dx, dy) =
     let nextPos (x, y) = (x + dx, y + dy)

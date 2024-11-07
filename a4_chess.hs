@@ -57,7 +57,6 @@ sanLocConverter (col, row) = (ord col - ord 'a', 8 - row )
 -- Parse the Move String: Check for presence of 'x' to determine if it’s a capture.
 -- Extract the Piece and Target Location: Use pattern matching to handle different SAN cases.
 -- Filter Pieces on the Board: Find all pieces of the specified type and color.
-
 parseMove :: Board -> Colour -> String -> (Piece, [Loc], Loc, (Maybe Int, Maybe Int), Bool)
 parseMove board colour string =
   let
@@ -82,13 +81,13 @@ parseMove board colour string =
 
       -- Disambiguation parsing
       disambiguation = case init rest of
-          [col] | col `elem` ['a'..'h'] -> (Just (ord col - ord 'a'), Nothing) -- Only column disambiguation
-          [row] | row `elem` ['1'..'8'] -> (Nothing, Just (ord row - ord '1')) -- Only row disambiguation
+          [col] | col `elem` ['a'..'h'] -> (Nothing, Nothing) 
+          [row] | row `elem` ['1'..'8'] -> (Nothing, Nothing) 
           [col, row] | col `elem` ['a'..'h'] && row `elem` ['1'..'8'] -> 
-                        (Just (ord col - ord 'a'), Just (ord row - ord '1')) -- Both column and row disambiguation
+                        (Nothing, Nothing) 
           _ -> (Nothing, Nothing)
 
-      -- Find all locations of pieces of the specified type and color
+      -- Find all locations of pieces of the specified type and colour
       allLocs = [(x, y) | (row, y) <- zip board [0..], (square, x) <- zip row [0..], 
             square == Filled colour piece]
   in
