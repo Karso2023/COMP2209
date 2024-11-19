@@ -1,0 +1,64 @@
+Add : 
+
+pops the top two elements of the stack
+
+adds them and pushes the result back on to the stack
+
+
+Sub:
+
+Subtracts the top two elements of the stack
+
+Subtracts them and pushes the result back on to the stack
+
+
+Mul:
+
+Multiply the top two elements of the stack
+
+Multiply them and pushes the result back on to the stack
+
+
+Div:
+
+Divide the top two elements of the stack
+
+divide them and pushes the result back on to the stack
+
+
+Dup:
+
+Pushes another copy of the top element on to the stack
+
+
+Pop:
+
+Removes the top element of the stack 
+
+
+
+## Have to consider how each operation behaves on the Nothing value 
+
+Adding, subtracting, multiplying and dividing:
+
+Either argument being Nothing pushes Nothing back on to the stack.
+
+
+Attempting division by a zero value pushes Nothing on to the stack. 
+
+The Dup and Pop operations duplicate and pop Nothing values as if they were any other values.
+
+
+
+## Reduction Sequence 
+
+Stack machine is a reduction sequence for a given input stack S if: 
+
+It does not use any Dup instructions
+
+The resulting stack contains a single value
+
+
+## Maximal reduction sequence for a stack S
+
+The resulting single value is maximum among all possible reduction sequences for S.
