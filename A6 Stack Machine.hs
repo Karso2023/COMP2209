@@ -58,4 +58,3 @@ tryInstruction ins stack prog maxVal maxProgs =
 
 
 
-
