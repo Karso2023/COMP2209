@@ -42,6 +42,7 @@ isValidMove board color from to isCapture =
             to `elem` possMovesJR board from && 
             (isCapture == (targetSquare /= Just Empty))
         _ -> False
+        
 
 getPiece :: Board -> Loc -> Maybe Square
 getPiece board (col, row)
