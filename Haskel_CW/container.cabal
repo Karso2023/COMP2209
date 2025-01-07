@@ -1,0 +1,20 @@
+cabal-version:      3.0
+name:               haskell-cw        
+version:            0.1.0.0
+build-type:         Simple
+
+Test-Suite test-cw
+    type:               exitcode-stdio-1.0
+    hs-source-dirs:     test
+                        .
+    default-language:   Haskell2010
+    main-is:           Tests.hs
+    other-modules:     Q1, 
+                       Q2, 
+                       Q3, 
+                       Q4, 
+                       Q5, 
+                       Q6
+    build-depends:     base >=4.14,
+                      HUnit,
+                      containers

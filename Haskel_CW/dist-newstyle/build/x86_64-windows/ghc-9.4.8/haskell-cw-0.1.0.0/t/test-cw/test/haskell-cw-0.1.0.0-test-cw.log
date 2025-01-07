@@ -1,0 +1,4 @@
+Test suite test-cw: RUNNING...
+Cases: 2  Tried: 0  Errors: 0  Failures: 0Cases: 2  Tried: 1  Errors: 0  Failures: 0                                          Cases: 2  Tried: 2  Errors: 0  Failures: 0
+Test suite test-cw: PASS
+Test suite logged to: C:\CS_Y2\Sem_1\COMP2209-Programming-3\Haskel_CW\dist-newstyle\build\x86_64-windows\ghc-9.4.8\haskell-cw-0.1.0.0\t\test-cw\test\haskell-cw-0.1.0.0-test-cw.log
