@@ -1,8 +1,8 @@
 {-
- Module      : COMP2209
+  Module      : COMP2209
   Copyright   : (c) 2025 University of Southampton
   Author      : Sze Long Cheung, Karso 
-  Description : test cases for Q1 - Q6
+  Description : test cases for Q1 - Q6, approach for each question have been described separately below
 
     src1: https://putridparrot.com/blog/unit-testing-haskel-code-with-hunit/ (for HUnit tutorial)
     src2: https://math.stackexchange.com/questions/4427192/use-of-parentheses-in-lambda-calculus-when-%CE%BB-is-involved (for Q3 lambda parenthesis test case)
@@ -33,12 +33,13 @@ main = do
         testCalcInteractions_Size30_EmptyAtoms, -- size 30 without atoms to test if the ray give the correct default output path
         testCalcInteractions_Size1_OneAtoms, -- calcInteractions with size 1 with 1 atoms
         testCalcInteractions_Size3_OneAtom, -- one atom in the middle for simple case testing of ray next position and directions
-        testCalcInteractions_Size6_CentreAtoms, -- atoms blocked in the middle for advanced case testing of ray reflection and is most focus on East and West face
+        testCalcInteractions_Size6_CentreAtoms, -- atoms blocked in the middle for advanced case testing of ray reflection and is most focus on Q1.East and Q1.West face
         testCalcInteractions_Size6_UpwardTriAtoms, -- calcInteractions with size 6 with atoms only on upward triangle
         testCalcInteractions_Size6_DownwardTriAtoms, -- calcInteractions with size 6 with atoms only on downward triangle
         testCalcInteractions_Size30_RandomAtoms, -- check how calcInteractions work with large size and bunch of random atoms to check the efficiency of my code
 
         -- Q2
+        testSolveTBB_case1,
         
         -- Q3
         testUnparse_BaseCase, -- test empty case
@@ -53,13 +54,24 @@ main = do
         testParseLamMacro_EmptyInput, -- test empty input (should return Nothing)
         testParseLamMacro_InvalidGrammar, -- test invalid grammar (should return Nothing)
         testParseLamMacro_RepeatedMacro, -- test repeated Macros (should return Noting)
-        testParseLamMacro_FreeVariables -- should return Nothing
+        testParseLamMacro_FreeVariables, -- should return Nothing
 
         -- Q5
-        
+        testCpsTransform_Rule_1, -- [[ x ]] = λ κ →  (κ x)
+        testCpsTransform_Rule_2, -- [[ λx → E ]] = λκ → (κ λx → [[ E ]])
+        testCpsTransform_Rule_3, -- [[ (E1 E2) ]] = λκ → ( [[ E1 ]]  λf → ( [[ E2 ]]  λe → (f e κ) ) )
+        testCpsTransform_Rule_4, -- [[ def X = E in ME ]]  = def X = [[ E ]]  in  [[ ME ]]
+        testCpsTransform_Rule_5, -- [[ X ]] = X
+        testCpsTransform_Rules_Combined, -- Rules combined together (the result is quite long)
 
         -- Q6
-
+        testCompareInnerOuter_1,
+        testCompareInnerOuter_2,
+        testCompareInnerOuter_3,
+        testCompareInnerOuter_4,
+        testCompareInnerOuter_5,
+        testCompareInnerOuter_6,
+        testCompareInnerOuter_7
         ])
     if errors counts + failures counts == 0
         then exitSuccess
@@ -74,7 +86,7 @@ main = do
         - Check ray default reflect by applying 0 atoms with size n, where n = any reasonable size
         - Check if the the ray cannot enter the triangle box by applying size 1 with atom at (1,1)
         - Check the reflection of ray by applying one atom in the middle of the triangle box (simple case)
-        - Check atoms blocked in the middle of the triangle box for advanced case testing of ray reflection and is mostly focusing on East and West face
+        - Check atoms blocked in the middle of the triangle box for advanced case testing of ray reflection and is mostly focusing on Q1.East and Q1.West face
         - Check the reflection of upward triangle
         - Check the reflection of downward triangle
         - Check the efficiency of calcInteractions work with large size and bunch of random atoms
@@ -84,7 +96,7 @@ main = do
 testCalcInteractions_Size0_EmptyAtoms = TestCase $ assertEqual
     "calcInteractions with size 0"
     expectedResult
-    (calcInteractions 0 [])
+    (Q1.calcInteractions 0 [])
   where
     expectedResult = []
 
@@ -92,128 +104,128 @@ testCalcInteractions_Size0_EmptyAtoms = TestCase $ assertEqual
 testCalcInteractions_Size30_EmptyAtoms = TestCase $ assertEqual
     "calcInteractions with size 6 with atoms only on downward triangle"
     expectedResult
-    (calcInteractions 30 [])
+    (Q1.calcInteractions 30 [])
   where
-    expectedResult = [(EP East 1 L,EP West 1 R),(EP East 1 R,EP South 1 L),(EP East 2 L,EP West 2 R),
-                      (EP East 2 R,EP South 2 L),(EP East 3 L,EP West 3 R),(EP East 3 R,EP South 3 L),
-                      (EP East 4 L,EP West 4 R),(EP East 4 R,EP South 4 L),(EP East 5 L,EP West 5 R),
-                      (EP East 5 R,EP South 5 L),(EP East 6 L,EP West 6 R),(EP East 6 R,EP South 6 L),
-                      (EP East 7 L,EP West 7 R),(EP East 7 R,EP South 7 L),(EP East 8 L,EP West 8 R),
-                      (EP East 8 R,EP South 8 L),(EP East 9 L,EP West 9 R),(EP East 9 R,EP South 9 L),
-                      (EP East 10 L,EP West 10 R),(EP East 10 R,EP South 10 L),(EP East 11 L,EP West 11 R),
-                      (EP East 11 R,EP South 11 L),(EP East 12 L,EP West 12 R),(EP East 12 R,EP South 12 L),
-                      (EP East 13 L,EP West 13 R),(EP East 13 R,EP South 13 L),(EP East 14 L,EP West 14 R),
-                      (EP East 14 R,EP South 14 L),(EP East 15 L,EP West 15 R),(EP East 15 R,EP South 15 L),
-                      (EP East 16 L,EP West 16 R),(EP East 16 R,EP South 16 L),(EP East 17 L,EP West 17 R),
-                      (EP East 17 R,EP South 17 L),(EP East 18 L,EP West 18 R),(EP East 18 R,EP South 18 L),
-                      (EP East 19 L,EP West 19 R),(EP East 19 R,EP South 19 L),(EP East 20 L,EP West 20 R),
-                      (EP East 20 R,EP South 20 L),(EP East 21 L,EP West 21 R),(EP East 21 R,EP South 21 L),
-                      (EP East 22 L,EP West 22 R),(EP East 22 R,EP South 22 L),(EP East 23 L,EP West 23 R),
-                      (EP East 23 R,EP South 23 L),(EP East 24 L,EP West 24 R),(EP East 24 R,EP South 24 L),
-                      (EP East 25 L,EP West 25 R),(EP East 25 R,EP South 25 L),(EP East 26 L,EP West 26 R),
-                      (EP East 26 R,EP South 26 L),(EP East 27 L,EP West 27 R),(EP East 27 R,EP South 27 L),
-                      (EP East 28 L,EP West 28 R),(EP East 28 R,EP South 28 L),(EP East 29 L,EP West 29 R),
-                      (EP East 29 R,EP South 29 L),(EP East 30 L,EP West 30 R),(EP East 30 R,EP South 30 L),
-                      (EP West 1 L,EP South 30 R),(EP West 1 R,EP East 1 L),(EP West 2 L,EP South 29 R),
-                      (EP West 2 R,EP East 2 L),(EP West 3 L,EP South 28 R),(EP West 3 R,EP East 3 L),
-                      (EP West 4 L,EP South 27 R),(EP West 4 R,EP East 4 L),(EP West 5 L,EP South 26 R),
-                      (EP West 5 R,EP East 5 L),(EP West 6 L,EP South 25 R),(EP West 6 R,EP East 6 L),
-                      (EP West 7 L,EP South 24 R),(EP West 7 R,EP East 7 L),(EP West 8 L,EP South 23 R),
-                      (EP West 8 R,EP East 8 L),(EP West 9 L,EP South 22 R),(EP West 9 R,EP East 9 L),
-                      (EP West 10 L,EP South 21 R),(EP West 10 R,EP East 10 L),(EP West 11 L,EP South 20 R),
-                      (EP West 11 R,EP East 11 L),(EP West 12 L,EP South 19 R),(EP West 12 R,EP East 12 L),
-                      (EP West 13 L,EP South 18 R),(EP West 13 R,EP East 13 L),(EP West 14 L,EP South 17 R),
-                      (EP West 14 R,EP East 14 L),(EP West 15 L,EP South 16 R),(EP West 15 R,EP East 15 L),
-                      (EP West 16 L,EP South 15 R),(EP West 16 R,EP East 16 L),(EP West 17 L,EP South 14 R),
-                      (EP West 17 R,EP East 17 L),(EP West 18 L,EP South 13 R),(EP West 18 R,EP East 18 L),
-                      (EP West 19 L,EP South 12 R),(EP West 19 R,EP East 19 L),(EP West 20 L,EP South 11 R),
-                      (EP West 20 R,EP East 20 L),(EP West 21 L,EP South 10 R),(EP West 21 R,EP East 21 L),
-                      (EP West 22 L,EP South 9 R),(EP West 22 R,EP East 22 L),(EP West 23 L,EP South 8 R),
-                      (EP West 23 R,EP East 23 L),(EP West 24 L,EP South 7 R),(EP West 24 R,EP East 24 L),
-                      (EP West 25 L,EP South 6 R),(EP West 25 R,EP East 25 L),(EP West 26 L,EP South 5 R),
-                      (EP West 26 R,EP East 26 L),(EP West 27 L,EP South 4 R),(EP West 27 R,EP East 27 L),
-                      (EP West 28 L,EP South 3 R),(EP West 28 R,EP East 28 L),(EP West 29 L,EP South 2 R),
-                      (EP West 29 R,EP East 29 L),(EP West 30 L,EP South 1 R),(EP West 30 R,EP East 30 L),
-                      (EP South 1 L,EP East 1 R),(EP South 1 R,EP West 30 L),(EP South 2 L,EP East 2 R),
-                      (EP South 2 R,EP West 29 L),(EP South 3 L,EP East 3 R),(EP South 3 R,EP West 28 L),
-                      (EP South 4 L,EP East 4 R),(EP South 4 R,EP West 27 L),(EP South 5 L,EP East 5 R),
-                      (EP South 5 R,EP West 26 L),(EP South 6 L,EP East 6 R),(EP South 6 R,EP West 25 L),
-                      (EP South 7 L,EP East 7 R),(EP South 7 R,EP West 24 L),(EP South 8 L,EP East 8 R),
-                      (EP South 8 R,EP West 23 L),(EP South 9 L,EP East 9 R),(EP South 9 R,EP West 22 L),
-                      (EP South 10 L,EP East 10 R),(EP South 10 R,EP West 21 L),(EP South 11 L,EP East 11 R),
-                      (EP South 11 R,EP West 20 L),(EP South 12 L,EP East 12 R),(EP South 12 R,EP West 19 L),
-                      (EP South 13 L,EP East 13 R),(EP South 13 R,EP West 18 L),(EP South 14 L,EP East 14 R),
-                      (EP South 14 R,EP West 17 L),(EP South 15 L,EP East 15 R),(EP South 15 R,EP West 16 L),
-                      (EP South 16 L,EP East 16 R),(EP South 16 R,EP West 15 L),(EP South 17 L,EP East 17 R),
-                      (EP South 17 R,EP West 14 L),(EP South 18 L,EP East 18 R),(EP South 18 R,EP West 13 L),
-                      (EP South 19 L,EP East 19 R),(EP South 19 R,EP West 12 L),(EP South 20 L,EP East 20 R),
-                      (EP South 20 R,EP West 11 L),(EP South 21 L,EP East 21 R),(EP South 21 R,EP West 10 L),
-                      (EP South 22 L,EP East 22 R),(EP South 22 R,EP West 9 L),(EP South 23 L,EP East 23 R),
-                      (EP South 23 R,EP West 8 L),(EP South 24 L,EP East 24 R),(EP South 24 R,EP West 7 L),
-                      (EP South 25 L,EP East 25 R),(EP South 25 R,EP West 6 L),(EP South 26 L,EP East 26 R),
-                      (EP South 26 R,EP West 5 L),(EP South 27 L,EP East 27 R),(EP South 27 R,EP West 4 L),
-                      (EP South 28 L,EP East 28 R),(EP South 28 R,EP West 3 L),(EP South 29 L,EP East 29 R),
-                      (EP South 29 R,EP West 2 L),(EP South 30 L,EP East 30 R),(EP South 30 R,EP West 1 L)]
+    expectedResult = [(Q1.EP Q1.East 1 Q1.L,Q1.EP Q1.West 1 Q1.R),(Q1.EP Q1.East 1 Q1.R,Q1.EP Q1.South 1 Q1.L),(Q1.EP Q1.East 2 Q1.L,Q1.EP Q1.West 2 Q1.R),
+                      (Q1.EP Q1.East 2 Q1.R,Q1.EP Q1.South 2 Q1.L),(Q1.EP Q1.East 3 Q1.L,Q1.EP Q1.West 3 Q1.R),(Q1.EP Q1.East 3 Q1.R,Q1.EP Q1.South 3 Q1.L),
+                      (Q1.EP Q1.East 4 Q1.L,Q1.EP Q1.West 4 Q1.R),(Q1.EP Q1.East 4 Q1.R,Q1.EP Q1.South 4 Q1.L),(Q1.EP Q1.East 5 Q1.L,Q1.EP Q1.West 5 Q1.R),
+                      (Q1.EP Q1.East 5 Q1.R,Q1.EP Q1.South 5 Q1.L),(Q1.EP Q1.East 6 Q1.L,Q1.EP Q1.West 6 Q1.R),(Q1.EP Q1.East 6 Q1.R,Q1.EP Q1.South 6 Q1.L),
+                      (Q1.EP Q1.East 7 Q1.L,Q1.EP Q1.West 7 Q1.R),(Q1.EP Q1.East 7 Q1.R,Q1.EP Q1.South 7 Q1.L),(Q1.EP Q1.East 8 Q1.L,Q1.EP Q1.West 8 Q1.R),
+                      (Q1.EP Q1.East 8 Q1.R,Q1.EP Q1.South 8 Q1.L),(Q1.EP Q1.East 9 Q1.L,Q1.EP Q1.West 9 Q1.R),(Q1.EP Q1.East 9 Q1.R,Q1.EP Q1.South 9 Q1.L),
+                      (Q1.EP Q1.East 10 Q1.L,Q1.EP Q1.West 10 Q1.R),(Q1.EP Q1.East 10 Q1.R,Q1.EP Q1.South 10 Q1.L),(Q1.EP Q1.East 11 Q1.L,Q1.EP Q1.West 11 Q1.R),
+                      (Q1.EP Q1.East 11 Q1.R,Q1.EP Q1.South 11 Q1.L),(Q1.EP Q1.East 12 Q1.L,Q1.EP Q1.West 12 Q1.R),(Q1.EP Q1.East 12 Q1.R,Q1.EP Q1.South 12 Q1.L),
+                      (Q1.EP Q1.East 13 Q1.L,Q1.EP Q1.West 13 Q1.R),(Q1.EP Q1.East 13 Q1.R,Q1.EP Q1.South 13 Q1.L),(Q1.EP Q1.East 14 Q1.L,Q1.EP Q1.West 14 Q1.R),
+                      (Q1.EP Q1.East 14 Q1.R,Q1.EP Q1.South 14 Q1.L),(Q1.EP Q1.East 15 Q1.L,Q1.EP Q1.West 15 Q1.R),(Q1.EP Q1.East 15 Q1.R,Q1.EP Q1.South 15 Q1.L),
+                      (Q1.EP Q1.East 16 Q1.L,Q1.EP Q1.West 16 Q1.R),(Q1.EP Q1.East 16 Q1.R,Q1.EP Q1.South 16 Q1.L),(Q1.EP Q1.East 17 Q1.L,Q1.EP Q1.West 17 Q1.R),
+                      (Q1.EP Q1.East 17 Q1.R,Q1.EP Q1.South 17 Q1.L),(Q1.EP Q1.East 18 Q1.L,Q1.EP Q1.West 18 Q1.R),(Q1.EP Q1.East 18 Q1.R,Q1.EP Q1.South 18 Q1.L),
+                      (Q1.EP Q1.East 19 Q1.L,Q1.EP Q1.West 19 Q1.R),(Q1.EP Q1.East 19 Q1.R,Q1.EP Q1.South 19 Q1.L),(Q1.EP Q1.East 20 Q1.L,Q1.EP Q1.West 20 Q1.R),
+                      (Q1.EP Q1.East 20 Q1.R,Q1.EP Q1.South 20 Q1.L),(Q1.EP Q1.East 21 Q1.L,Q1.EP Q1.West 21 Q1.R),(Q1.EP Q1.East 21 Q1.R,Q1.EP Q1.South 21 Q1.L),
+                      (Q1.EP Q1.East 22 Q1.L,Q1.EP Q1.West 22 Q1.R),(Q1.EP Q1.East 22 Q1.R,Q1.EP Q1.South 22 Q1.L),(Q1.EP Q1.East 23 Q1.L,Q1.EP Q1.West 23 Q1.R),
+                      (Q1.EP Q1.East 23 Q1.R,Q1.EP Q1.South 23 Q1.L),(Q1.EP Q1.East 24 Q1.L,Q1.EP Q1.West 24 Q1.R),(Q1.EP Q1.East 24 Q1.R,Q1.EP Q1.South 24 Q1.L),
+                      (Q1.EP Q1.East 25 Q1.L,Q1.EP Q1.West 25 Q1.R),(Q1.EP Q1.East 25 Q1.R,Q1.EP Q1.South 25 Q1.L),(Q1.EP Q1.East 26 Q1.L,Q1.EP Q1.West 26 Q1.R),
+                      (Q1.EP Q1.East 26 Q1.R,Q1.EP Q1.South 26 Q1.L),(Q1.EP Q1.East 27 Q1.L,Q1.EP Q1.West 27 Q1.R),(Q1.EP Q1.East 27 Q1.R,Q1.EP Q1.South 27 Q1.L),
+                      (Q1.EP Q1.East 28 Q1.L,Q1.EP Q1.West 28 Q1.R),(Q1.EP Q1.East 28 Q1.R,Q1.EP Q1.South 28 Q1.L),(Q1.EP Q1.East 29 Q1.L,Q1.EP Q1.West 29 Q1.R),
+                      (Q1.EP Q1.East 29 Q1.R,Q1.EP Q1.South 29 Q1.L),(Q1.EP Q1.East 30 Q1.L,Q1.EP Q1.West 30 Q1.R),(Q1.EP Q1.East 30 Q1.R,Q1.EP Q1.South 30 Q1.L),
+                      (Q1.EP Q1.West 1 Q1.L,Q1.EP Q1.South 30 Q1.R),(Q1.EP Q1.West 1 Q1.R,Q1.EP Q1.East 1 Q1.L),(Q1.EP Q1.West 2 Q1.L,Q1.EP Q1.South 29 Q1.R),
+                      (Q1.EP Q1.West 2 Q1.R,Q1.EP Q1.East 2 Q1.L),(Q1.EP Q1.West 3 Q1.L,Q1.EP Q1.South 28 Q1.R),(Q1.EP Q1.West 3 Q1.R,Q1.EP Q1.East 3 Q1.L),
+                      (Q1.EP Q1.West 4 Q1.L,Q1.EP Q1.South 27 Q1.R),(Q1.EP Q1.West 4 Q1.R,Q1.EP Q1.East 4 Q1.L),(Q1.EP Q1.West 5 Q1.L,Q1.EP Q1.South 26 Q1.R),
+                      (Q1.EP Q1.West 5 Q1.R,Q1.EP Q1.East 5 Q1.L),(Q1.EP Q1.West 6 Q1.L,Q1.EP Q1.South 25 Q1.R),(Q1.EP Q1.West 6 Q1.R,Q1.EP Q1.East 6 Q1.L),
+                      (Q1.EP Q1.West 7 Q1.L,Q1.EP Q1.South 24 Q1.R),(Q1.EP Q1.West 7 Q1.R,Q1.EP Q1.East 7 Q1.L),(Q1.EP Q1.West 8 Q1.L,Q1.EP Q1.South 23 Q1.R),
+                      (Q1.EP Q1.West 8 Q1.R,Q1.EP Q1.East 8 Q1.L),(Q1.EP Q1.West 9 Q1.L,Q1.EP Q1.South 22 Q1.R),(Q1.EP Q1.West 9 Q1.R,Q1.EP Q1.East 9 Q1.L),
+                      (Q1.EP Q1.West 10 Q1.L,Q1.EP Q1.South 21 Q1.R),(Q1.EP Q1.West 10 Q1.R,Q1.EP Q1.East 10 Q1.L),(Q1.EP Q1.West 11 Q1.L,Q1.EP Q1.South 20 Q1.R),
+                      (Q1.EP Q1.West 11 Q1.R,Q1.EP Q1.East 11 Q1.L),(Q1.EP Q1.West 12 Q1.L,Q1.EP Q1.South 19 Q1.R),(Q1.EP Q1.West 12 Q1.R,Q1.EP Q1.East 12 Q1.L),
+                      (Q1.EP Q1.West 13 Q1.L,Q1.EP Q1.South 18 Q1.R),(Q1.EP Q1.West 13 Q1.R,Q1.EP Q1.East 13 Q1.L),(Q1.EP Q1.West 14 Q1.L,Q1.EP Q1.South 17 Q1.R),
+                      (Q1.EP Q1.West 14 Q1.R,Q1.EP Q1.East 14 Q1.L),(Q1.EP Q1.West 15 Q1.L,Q1.EP Q1.South 16 Q1.R),(Q1.EP Q1.West 15 Q1.R,Q1.EP Q1.East 15 Q1.L),
+                      (Q1.EP Q1.West 16 Q1.L,Q1.EP Q1.South 15 Q1.R),(Q1.EP Q1.West 16 Q1.R,Q1.EP Q1.East 16 Q1.L),(Q1.EP Q1.West 17 Q1.L,Q1.EP Q1.South 14 Q1.R),
+                      (Q1.EP Q1.West 17 Q1.R,Q1.EP Q1.East 17 Q1.L),(Q1.EP Q1.West 18 Q1.L,Q1.EP Q1.South 13 Q1.R),(Q1.EP Q1.West 18 Q1.R,Q1.EP Q1.East 18 Q1.L),
+                      (Q1.EP Q1.West 19 Q1.L,Q1.EP Q1.South 12 Q1.R),(Q1.EP Q1.West 19 Q1.R,Q1.EP Q1.East 19 Q1.L),(Q1.EP Q1.West 20 Q1.L,Q1.EP Q1.South 11 Q1.R),
+                      (Q1.EP Q1.West 20 Q1.R,Q1.EP Q1.East 20 Q1.L),(Q1.EP Q1.West 21 Q1.L,Q1.EP Q1.South 10 Q1.R),(Q1.EP Q1.West 21 Q1.R,Q1.EP Q1.East 21 Q1.L),
+                      (Q1.EP Q1.West 22 Q1.L,Q1.EP Q1.South 9 Q1.R),(Q1.EP Q1.West 22 Q1.R,Q1.EP Q1.East 22 Q1.L),(Q1.EP Q1.West 23 Q1.L,Q1.EP Q1.South 8 Q1.R),
+                      (Q1.EP Q1.West 23 Q1.R,Q1.EP Q1.East 23 Q1.L),(Q1.EP Q1.West 24 Q1.L,Q1.EP Q1.South 7 Q1.R),(Q1.EP Q1.West 24 Q1.R,Q1.EP Q1.East 24 Q1.L),
+                      (Q1.EP Q1.West 25 Q1.L,Q1.EP Q1.South 6 Q1.R),(Q1.EP Q1.West 25 Q1.R,Q1.EP Q1.East 25 Q1.L),(Q1.EP Q1.West 26 Q1.L,Q1.EP Q1.South 5 Q1.R),
+                      (Q1.EP Q1.West 26 Q1.R,Q1.EP Q1.East 26 Q1.L),(Q1.EP Q1.West 27 Q1.L,Q1.EP Q1.South 4 Q1.R),(Q1.EP Q1.West 27 Q1.R,Q1.EP Q1.East 27 Q1.L),
+                      (Q1.EP Q1.West 28 Q1.L,Q1.EP Q1.South 3 Q1.R),(Q1.EP Q1.West 28 Q1.R,Q1.EP Q1.East 28 Q1.L),(Q1.EP Q1.West 29 Q1.L,Q1.EP Q1.South 2 Q1.R),
+                      (Q1.EP Q1.West 29 Q1.R,Q1.EP Q1.East 29 Q1.L),(Q1.EP Q1.West 30 Q1.L,Q1.EP Q1.South 1 Q1.R),(Q1.EP Q1.West 30 Q1.R,Q1.EP Q1.East 30 Q1.L),
+                      (Q1.EP Q1.South 1 Q1.L,Q1.EP Q1.East 1 Q1.R),(Q1.EP Q1.South 1 Q1.R,Q1.EP Q1.West 30 Q1.L),(Q1.EP Q1.South 2 Q1.L,Q1.EP Q1.East 2 Q1.R),
+                      (Q1.EP Q1.South 2 Q1.R,Q1.EP Q1.West 29 Q1.L),(Q1.EP Q1.South 3 Q1.L,Q1.EP Q1.East 3 Q1.R),(Q1.EP Q1.South 3 Q1.R,Q1.EP Q1.West 28 Q1.L),
+                      (Q1.EP Q1.South 4 Q1.L,Q1.EP Q1.East 4 Q1.R),(Q1.EP Q1.South 4 Q1.R,Q1.EP Q1.West 27 Q1.L),(Q1.EP Q1.South 5 Q1.L,Q1.EP Q1.East 5 Q1.R),
+                      (Q1.EP Q1.South 5 Q1.R,Q1.EP Q1.West 26 Q1.L),(Q1.EP Q1.South 6 Q1.L,Q1.EP Q1.East 6 Q1.R),(Q1.EP Q1.South 6 Q1.R,Q1.EP Q1.West 25 Q1.L),
+                      (Q1.EP Q1.South 7 Q1.L,Q1.EP Q1.East 7 Q1.R),(Q1.EP Q1.South 7 Q1.R,Q1.EP Q1.West 24 Q1.L),(Q1.EP Q1.South 8 Q1.L,Q1.EP Q1.East 8 Q1.R),
+                      (Q1.EP Q1.South 8 Q1.R,Q1.EP Q1.West 23 Q1.L),(Q1.EP Q1.South 9 Q1.L,Q1.EP Q1.East 9 Q1.R),(Q1.EP Q1.South 9 Q1.R,Q1.EP Q1.West 22 Q1.L),
+                      (Q1.EP Q1.South 10 Q1.L,Q1.EP Q1.East 10 Q1.R),(Q1.EP Q1.South 10 Q1.R,Q1.EP Q1.West 21 Q1.L),(Q1.EP Q1.South 11 Q1.L,Q1.EP Q1.East 11 Q1.R),
+                      (Q1.EP Q1.South 11 Q1.R,Q1.EP Q1.West 20 Q1.L),(Q1.EP Q1.South 12 Q1.L,Q1.EP Q1.East 12 Q1.R),(Q1.EP Q1.South 12 Q1.R,Q1.EP Q1.West 19 Q1.L),
+                      (Q1.EP Q1.South 13 Q1.L,Q1.EP Q1.East 13 Q1.R),(Q1.EP Q1.South 13 Q1.R,Q1.EP Q1.West 18 Q1.L),(Q1.EP Q1.South 14 Q1.L,Q1.EP Q1.East 14 Q1.R),
+                      (Q1.EP Q1.South 14 Q1.R,Q1.EP Q1.West 17 Q1.L),(Q1.EP Q1.South 15 Q1.L,Q1.EP Q1.East 15 Q1.R),(Q1.EP Q1.South 15 Q1.R,Q1.EP Q1.West 16 Q1.L),
+                      (Q1.EP Q1.South 16 Q1.L,Q1.EP Q1.East 16 Q1.R),(Q1.EP Q1.South 16 Q1.R,Q1.EP Q1.West 15 Q1.L),(Q1.EP Q1.South 17 Q1.L,Q1.EP Q1.East 17 Q1.R),
+                      (Q1.EP Q1.South 17 Q1.R,Q1.EP Q1.West 14 Q1.L),(Q1.EP Q1.South 18 Q1.L,Q1.EP Q1.East 18 Q1.R),(Q1.EP Q1.South 18 Q1.R,Q1.EP Q1.West 13 Q1.L),
+                      (Q1.EP Q1.South 19 Q1.L,Q1.EP Q1.East 19 Q1.R),(Q1.EP Q1.South 19 Q1.R,Q1.EP Q1.West 12 Q1.L),(Q1.EP Q1.South 20 Q1.L,Q1.EP Q1.East 20 Q1.R),
+                      (Q1.EP Q1.South 20 Q1.R,Q1.EP Q1.West 11 Q1.L),(Q1.EP Q1.South 21 Q1.L,Q1.EP Q1.East 21 Q1.R),(Q1.EP Q1.South 21 Q1.R,Q1.EP Q1.West 10 Q1.L),
+                      (Q1.EP Q1.South 22 Q1.L,Q1.EP Q1.East 22 Q1.R),(Q1.EP Q1.South 22 Q1.R,Q1.EP Q1.West 9 Q1.L),(Q1.EP Q1.South 23 Q1.L,Q1.EP Q1.East 23 Q1.R),
+                      (Q1.EP Q1.South 23 Q1.R,Q1.EP Q1.West 8 Q1.L),(Q1.EP Q1.South 24 Q1.L,Q1.EP Q1.East 24 Q1.R),(Q1.EP Q1.South 24 Q1.R,Q1.EP Q1.West 7 Q1.L),
+                      (Q1.EP Q1.South 25 Q1.L,Q1.EP Q1.East 25 Q1.R),(Q1.EP Q1.South 25 Q1.R,Q1.EP Q1.West 6 Q1.L),(Q1.EP Q1.South 26 Q1.L,Q1.EP Q1.East 26 Q1.R),
+                      (Q1.EP Q1.South 26 Q1.R,Q1.EP Q1.West 5 Q1.L),(Q1.EP Q1.South 27 Q1.L,Q1.EP Q1.East 27 Q1.R),(Q1.EP Q1.South 27 Q1.R,Q1.EP Q1.West 4 Q1.L),
+                      (Q1.EP Q1.South 28 Q1.L,Q1.EP Q1.East 28 Q1.R),(Q1.EP Q1.South 28 Q1.R,Q1.EP Q1.West 3 Q1.L),(Q1.EP Q1.South 29 Q1.L,Q1.EP Q1.East 29 Q1.R),
+                      (Q1.EP Q1.South 29 Q1.R,Q1.EP Q1.West 2 Q1.L),(Q1.EP Q1.South 30 Q1.L,Q1.EP Q1.East 30 Q1.R),(Q1.EP Q1.South 30 Q1.R,Q1.EP Q1.West 1 Q1.L)]
 
 ----- Test case 3: calcInteractions with size 1 with 1 atoms
 testCalcInteractions_Size1_OneAtoms = TestCase $ assertEqual
     "calcInteractions with size 1 and 1 atom"
     expectedResult
-    (calcInteractions 1 [(1,1)])
+    (Q1.calcInteractions 1 [(1,1)])
   where
-    expectedResult = [(EP East 1 L,EP East 1 R),(EP East 1 R,EP East 1 L),(EP West 1 L,EP South 1 R),
-                      (EP West 1 R,EP West 1 L),(EP South 1 L,EP South 1 R),(EP South 1 R,EP West 1 L)]
+    expectedResult = [(Q1.EP Q1.East 1 Q1.L,Q1.EP Q1.East 1 Q1.R),(Q1.EP Q1.East 1 Q1.R,Q1.EP Q1.East 1 Q1.L),(Q1.EP Q1.West 1 Q1.L,Q1.EP Q1.South 1 Q1.R),
+                      (Q1.EP Q1.West 1 Q1.R,Q1.EP Q1.West 1 Q1.L),(Q1.EP Q1.South 1 Q1.L,Q1.EP Q1.South 1 Q1.R),(Q1.EP Q1.South 1 Q1.R,Q1.EP Q1.West 1 Q1.L)]
 
 ----- Test case 4: calcInteractions with size 6 with atoms blocked in the middle
 testCalcInteractions_Size3_OneAtom = TestCase $ assertEqual
     "calcInteractions with size 3 and one atom in the middle"
     expectedResult
-    (calcInteractions 3 [(2,2)])
+    (Q1.calcInteractions 3 [(2,2)])
   where
-    expectedResult = [(EP East 1 L,EP West 1 R),(EP East 1 R,EP West 1 L),(EP East 2 L,EP South 3 R),
-                       (EP East 2 R,EP South 2 L),(EP East 3 L,EP West 3 R),(EP East 3 R,EP South 3 L),
-                       (EP West 1 L,EP East 1 R),(EP West 1 R,EP East 1 L),(EP West 2 L,EP South 2 R),
-                       (EP West 2 R,EP South 1 L),(EP West 3 L,EP South 1 R),(EP West 3 R,EP East 3 L),
-                       (EP South 1 L,EP West 2 R),(EP South 1 R,EP West 3 L),(EP South 2 L,EP East 2 R),
-                       (EP South 2 R,EP West 2 L),(EP South 3 L,EP East 3 R),(EP South 3 R,EP East 2 L)]
+    expectedResult = [(Q1.EP Q1.East 1 Q1.L,Q1.EP Q1.West 1 Q1.R),(Q1.EP Q1.East 1 Q1.R,Q1.EP Q1.West 1 Q1.L),(Q1.EP Q1.East 2 Q1.L,Q1.EP Q1.South 3 Q1.R),
+                       (Q1.EP Q1.East 2 Q1.R,Q1.EP Q1.South 2 Q1.L),(Q1.EP Q1.East 3 Q1.L,Q1.EP Q1.West 3 Q1.R),(Q1.EP Q1.East 3 Q1.R,Q1.EP Q1.South 3 Q1.L),
+                       (Q1.EP Q1.West 1 Q1.L,Q1.EP Q1.East 1 Q1.R),(Q1.EP Q1.West 1 Q1.R,Q1.EP Q1.East 1 Q1.L),(Q1.EP Q1.West 2 Q1.L,Q1.EP Q1.South 2 Q1.R),
+                       (Q1.EP Q1.West 2 Q1.R,Q1.EP Q1.South 1 Q1.L),(Q1.EP Q1.West 3 Q1.L,Q1.EP Q1.South 1 Q1.R),(Q1.EP Q1.West 3 Q1.R,Q1.EP Q1.East 3 Q1.L),
+                       (Q1.EP Q1.South 1 Q1.L,Q1.EP Q1.West 2 Q1.R),(Q1.EP Q1.South 1 Q1.R,Q1.EP Q1.West 3 Q1.L),(Q1.EP Q1.South 2 Q1.L,Q1.EP Q1.East 2 Q1.R),
+                       (Q1.EP Q1.South 2 Q1.R,Q1.EP Q1.West 2 Q1.L),(Q1.EP Q1.South 3 Q1.L,Q1.EP Q1.East 3 Q1.R),(Q1.EP Q1.South 3 Q1.R,Q1.EP Q1.East 2 Q1.L)]
 
 ----- Test case 5: calcInteractions with size 6 with atoms blocked in the middle
 testCalcInteractions_Size6_CentreAtoms = TestCase $ assertEqual
     "calcInteractions with size 6 and atoms blocked in the middle"
     expectedResult
-    (calcInteractions 6 [(1,1), (2,2), (3,3), (4,4), (5,5), (6,6)])
+    (Q1.calcInteractions 6 [(1,1), (2,2), (3,3), (4,4), (5,5), (6,6)])
   where
-    expectedResult = [(EP East 1 L,EP East 1 R),(EP East 1 R,EP East 1 L),(EP East 2 L,EP South 6 R),
-                      (EP East 2 R,EP East 3 L),(EP East 3 L,EP East 2 R),(EP East 3 R,EP East 5 L),
-                      (EP East 4 L,EP South 5 R),(EP East 4 R,EP South 4 L),(EP East 5 L,EP East 3 R),
-                      (EP East 5 R,EP South 5 L),(EP East 6 L,EP South 4 R),(EP East 6 R,EP South 6 L),
-                      (EP West 1 L,EP West 1 R),(EP West 1 R,EP West 1 L),(EP West 2 L,EP West 3 R),
-                      (EP West 2 R,EP South 1 L),(EP West 3 L,EP West 5 R),(EP West 3 R,EP West 2 L),
-                      (EP West 4 L,EP South 3 R),(EP West 4 R,EP South 2 L),(EP West 5 L,EP South 2 R),
-                      (EP West 5 R,EP West 3 L),(EP West 6 L,EP South 1 R),(EP West 6 R,EP South 3 L),
-                      (EP South 1 L,EP West 2 R),(EP South 1 R,EP West 6 L),(EP South 2 L,EP West 4 R),
-                      (EP South 2 R,EP West 5 L),(EP South 3 L,EP West 6 R),(EP South 3 R,EP West 4 L),
-                      (EP South 4 L,EP East 4 R),(EP South 4 R,EP East 6 L),(EP South 5 L,EP East 5 R),
-                      (EP South 5 R,EP East 4 L),(EP South 6 L,EP East 6 R),(EP South 6 R,EP East 2 L)]
+    expectedResult = [(Q1.EP Q1.East 1 Q1.L,Q1.EP Q1.East 1 Q1.R),(Q1.EP Q1.East 1 Q1.R,Q1.EP Q1.East 1 Q1.L),(Q1.EP Q1.East 2 Q1.L,Q1.EP Q1.South 6 Q1.R),
+                      (Q1.EP Q1.East 2 Q1.R,Q1.EP Q1.East 3 Q1.L),(Q1.EP Q1.East 3 Q1.L,Q1.EP Q1.East 2 Q1.R),(Q1.EP Q1.East 3 Q1.R,Q1.EP Q1.East 5 Q1.L),
+                      (Q1.EP Q1.East 4 Q1.L,Q1.EP Q1.South 5 Q1.R),(Q1.EP Q1.East 4 Q1.R,Q1.EP Q1.South 4 Q1.L),(Q1.EP Q1.East 5 Q1.L,Q1.EP Q1.East 3 Q1.R),
+                      (Q1.EP Q1.East 5 Q1.R,Q1.EP Q1.South 5 Q1.L),(Q1.EP Q1.East 6 Q1.L,Q1.EP Q1.South 4 Q1.R),(Q1.EP Q1.East 6 Q1.R,Q1.EP Q1.South 6 Q1.L),
+                      (Q1.EP Q1.West 1 Q1.L,Q1.EP Q1.West 1 Q1.R),(Q1.EP Q1.West 1 Q1.R,Q1.EP Q1.West 1 Q1.L),(Q1.EP Q1.West 2 Q1.L,Q1.EP Q1.West 3 Q1.R),
+                      (Q1.EP Q1.West 2 Q1.R,Q1.EP Q1.South 1 Q1.L),(Q1.EP Q1.West 3 Q1.L,Q1.EP Q1.West 5 Q1.R),(Q1.EP Q1.West 3 Q1.R,Q1.EP Q1.West 2 Q1.L),
+                      (Q1.EP Q1.West 4 Q1.L,Q1.EP Q1.South 3 Q1.R),(Q1.EP Q1.West 4 Q1.R,Q1.EP Q1.South 2 Q1.L),(Q1.EP Q1.West 5 Q1.L,Q1.EP Q1.South 2 Q1.R),
+                      (Q1.EP Q1.West 5 Q1.R,Q1.EP Q1.West 3 Q1.L),(Q1.EP Q1.West 6 Q1.L,Q1.EP Q1.South 1 Q1.R),(Q1.EP Q1.West 6 Q1.R,Q1.EP Q1.South 3 Q1.L),
+                      (Q1.EP Q1.South 1 Q1.L,Q1.EP Q1.West 2 Q1.R),(Q1.EP Q1.South 1 Q1.R,Q1.EP Q1.West 6 Q1.L),(Q1.EP Q1.South 2 Q1.L,Q1.EP Q1.West 4 Q1.R),
+                      (Q1.EP Q1.South 2 Q1.R,Q1.EP Q1.West 5 Q1.L),(Q1.EP Q1.South 3 Q1.L,Q1.EP Q1.West 6 Q1.R),(Q1.EP Q1.South 3 Q1.R,Q1.EP Q1.West 4 Q1.L),
+                      (Q1.EP Q1.South 4 Q1.L,Q1.EP Q1.East 4 Q1.R),(Q1.EP Q1.South 4 Q1.R,Q1.EP Q1.East 6 Q1.L),(Q1.EP Q1.South 5 Q1.L,Q1.EP Q1.East 5 Q1.R),
+                      (Q1.EP Q1.South 5 Q1.R,Q1.EP Q1.East 4 Q1.L),(Q1.EP Q1.South 6 Q1.L,Q1.EP Q1.East 6 Q1.R),(Q1.EP Q1.South 6 Q1.R,Q1.EP Q1.East 2 Q1.L)]
 
 ----- Test case 6: calcInteractions with size 6 with atoms only on upward triangle
 testCalcInteractions_Size6_UpwardTriAtoms = TestCase $ assertEqual
     "calcInteractions with size 6 with atoms only on upward triangle"
     expectedResult
-    (calcInteractions 6 [(1,1),(3,1),(3,3),(3,5),(4,3),(4,5),(4,7),(5,3),(5,9),(6,1),(6,5),(6,9),(6,11)])
+    (Q1.calcInteractions 6 [(1,1),(3,1),(3,3),(3,5),(4,3),(4,5),(4,7),(5,3),(5,9),(6,1),(6,5),(6,9),(6,11)])
   where
-    expectedResult = [(EP East 1 L,EP East 1 R),(EP East 1 R,EP East 1 L),(EP East 2 L,EP West 2 R),
-                      (EP East 2 R,EP West 2 L),(EP East 3 L,EP East 3 R),(EP East 3 R,EP East 3 L),
-                      (EP East 4 L,EP East 4 R),(EP East 4 R,EP East 4 L),(EP East 5 L,EP East 5 R),
-                      (EP East 5 R,EP East 5 L),(EP East 6 L,EP East 6 R),(EP East 6 R,EP East 6 L),
-                      (EP West 1 L,EP West 1 R),(EP West 1 R,EP West 1 L),(EP West 2 L,EP East 2 R),
-                      (EP West 2 R,EP East 2 L),(EP West 3 L,EP West 3 R),(EP West 3 R,EP West 3 L),
-                      (EP West 4 L,EP West 5 R),(EP West 4 R,EP South 2 L),(EP West 5 L,EP South 2 R),
-                      (EP West 5 R,EP West 4 L),(EP West 6 L,EP South 1 R),(EP West 6 R,EP West 6 L),
-                      (EP South 1 L,EP South 1 R),(EP South 1 R,EP West 6 L),(EP South 2 L,EP West 4 R),
-                      (EP South 2 R,EP West 5 L),(EP South 3 L,EP South 3 R),(EP South 3 R,EP South 3 L),
-                      (EP South 4 L,EP South 4 R),(EP South 4 R,EP South 4 L),(EP South 5 L,EP South 5 R),
-                      (EP South 5 R,EP South 5 L),(EP South 6 L,EP South 6 R),(EP South 6 R,EP South 6 L)]
+    expectedResult = [(Q1.EP Q1.East 1 Q1.L,Q1.EP Q1.East 1 Q1.R),(Q1.EP Q1.East 1 Q1.R,Q1.EP Q1.East 1 Q1.L),(Q1.EP Q1.East 2 Q1.L,Q1.EP Q1.West 2 Q1.R),
+                      (Q1.EP Q1.East 2 Q1.R,Q1.EP Q1.West 2 Q1.L),(Q1.EP Q1.East 3 Q1.L,Q1.EP Q1.East 3 Q1.R),(Q1.EP Q1.East 3 Q1.R,Q1.EP Q1.East 3 Q1.L),
+                      (Q1.EP Q1.East 4 Q1.L,Q1.EP Q1.East 4 Q1.R),(Q1.EP Q1.East 4 Q1.R,Q1.EP Q1.East 4 Q1.L),(Q1.EP Q1.East 5 Q1.L,Q1.EP Q1.East 5 Q1.R),
+                      (Q1.EP Q1.East 5 Q1.R,Q1.EP Q1.East 5 Q1.L),(Q1.EP Q1.East 6 Q1.L,Q1.EP Q1.East 6 Q1.R),(Q1.EP Q1.East 6 Q1.R,Q1.EP Q1.East 6 Q1.L),
+                      (Q1.EP Q1.West 1 Q1.L,Q1.EP Q1.West 1 Q1.R),(Q1.EP Q1.West 1 Q1.R,Q1.EP Q1.West 1 Q1.L),(Q1.EP Q1.West 2 Q1.L,Q1.EP Q1.East 2 Q1.R),
+                      (Q1.EP Q1.West 2 Q1.R,Q1.EP Q1.East 2 Q1.L),(Q1.EP Q1.West 3 Q1.L,Q1.EP Q1.West 3 Q1.R),(Q1.EP Q1.West 3 Q1.R,Q1.EP Q1.West 3 Q1.L),
+                      (Q1.EP Q1.West 4 Q1.L,Q1.EP Q1.West 5 Q1.R),(Q1.EP Q1.West 4 Q1.R,Q1.EP Q1.South 2 Q1.L),(Q1.EP Q1.West 5 Q1.L,Q1.EP Q1.South 2 Q1.R),
+                      (Q1.EP Q1.West 5 Q1.R,Q1.EP Q1.West 4 Q1.L),(Q1.EP Q1.West 6 Q1.L,Q1.EP Q1.South 1 Q1.R),(Q1.EP Q1.West 6 Q1.R,Q1.EP Q1.West 6 Q1.L),
+                      (Q1.EP Q1.South 1 Q1.L,Q1.EP Q1.South 1 Q1.R),(Q1.EP Q1.South 1 Q1.R,Q1.EP Q1.West 6 Q1.L),(Q1.EP Q1.South 2 Q1.L,Q1.EP Q1.West 4 Q1.R),
+                      (Q1.EP Q1.South 2 Q1.R,Q1.EP Q1.West 5 Q1.L),(Q1.EP Q1.South 3 Q1.L,Q1.EP Q1.South 3 Q1.R),(Q1.EP Q1.South 3 Q1.R,Q1.EP Q1.South 3 Q1.L),
+                      (Q1.EP Q1.South 4 Q1.L,Q1.EP Q1.South 4 Q1.R),(Q1.EP Q1.South 4 Q1.R,Q1.EP Q1.South 4 Q1.L),(Q1.EP Q1.South 5 Q1.L,Q1.EP Q1.South 5 Q1.R),
+                      (Q1.EP Q1.South 5 Q1.R,Q1.EP Q1.South 5 Q1.L),(Q1.EP Q1.South 6 Q1.L,Q1.EP Q1.South 6 Q1.R),(Q1.EP Q1.South 6 Q1.R,Q1.EP Q1.South 6 Q1.L)]
 
                        
 
@@ -221,128 +233,132 @@ testCalcInteractions_Size6_UpwardTriAtoms = TestCase $ assertEqual
 testCalcInteractions_Size6_DownwardTriAtoms = TestCase $ assertEqual
     "calcInteractions with size 6 with atoms only on downward triangle"
     expectedResult
-    (calcInteractions 6 [(2,2),(3,2),(3,4),(4,4),(4,6),(6,2),(6,6),(6,8)])
+    (Q1.calcInteractions 6 [(2,2),(3,2),(3,4),(4,4),(4,6),(6,2),(6,6),(6,8)])
   where
-    expectedResult = [(EP East 1 L,EP West 1 R),(EP East 1 R,EP West 1 L),(EP East 2 L,EP East 2 R),
-                      (EP East 2 R,EP East 2 L),(EP East 3 L,EP East 3 R),(EP East 3 R,EP East 3 L),
-                      (EP East 4 L,EP South 6 R),(EP East 4 R,EP West 3 L),(EP East 5 L,EP West 5 R),
-                      (EP East 5 R,EP South 5 L),(EP East 6 L,EP South 5 R),(EP East 6 R,EP South 6 L),
-                      (EP West 1 L,EP East 1 R),(EP West 1 R,EP East 1 L),(EP West 2 L,EP West 2 R),
-                      (EP West 2 R,EP West 2 L),(EP West 3 L,EP East 4 R),(EP West 3 R,EP West 5 L),
-                      (EP West 4 L,EP South 3 R),(EP West 4 R,EP South 2 L),(EP West 5 L,EP West 3 R),
-                      (EP West 5 R,EP East 5 L),(EP West 6 L,EP South 1 R),(EP West 6 R,EP South 1 L),
-                      (EP South 1 L,EP West 6 R),(EP South 1 R,EP West 6 L),(EP South 2 L,EP West 4 R),
-                      (EP South 2 R,EP South 3 L),(EP South 3 L,EP South 2 R),(EP South 3 R,EP West 4 L),
-                      (EP South 4 L,EP South 4 R),(EP South 4 R,EP South 4 L),(EP South 5 L,EP East 5 R),
-                      (EP South 5 R,EP East 6 L),(EP South 6 L,EP East 6 R),(EP South 6 R,EP East 4 L)]
+    expectedResult = [(Q1.EP Q1.East 1 Q1.L,Q1.EP Q1.West 1 Q1.R),(Q1.EP Q1.East 1 Q1.R,Q1.EP Q1.West 1 Q1.L),(Q1.EP Q1.East 2 Q1.L,Q1.EP Q1.East 2 Q1.R),
+                      (Q1.EP Q1.East 2 Q1.R,Q1.EP Q1.East 2 Q1.L),(Q1.EP Q1.East 3 Q1.L,Q1.EP Q1.East 3 Q1.R),(Q1.EP Q1.East 3 Q1.R,Q1.EP Q1.East 3 Q1.L),
+                      (Q1.EP Q1.East 4 Q1.L,Q1.EP Q1.South 6 Q1.R),(Q1.EP Q1.East 4 Q1.R,Q1.EP Q1.West 3 Q1.L),(Q1.EP Q1.East 5 Q1.L,Q1.EP Q1.West 5 Q1.R),
+                      (Q1.EP Q1.East 5 Q1.R,Q1.EP Q1.South 5 Q1.L),(Q1.EP Q1.East 6 Q1.L,Q1.EP Q1.South 5 Q1.R),(Q1.EP Q1.East 6 Q1.R,Q1.EP Q1.South 6 Q1.L),
+                      (Q1.EP Q1.West 1 Q1.L,Q1.EP Q1.East 1 Q1.R),(Q1.EP Q1.West 1 Q1.R,Q1.EP Q1.East 1 Q1.L),(Q1.EP Q1.West 2 Q1.L,Q1.EP Q1.West 2 Q1.R),
+                      (Q1.EP Q1.West 2 Q1.R,Q1.EP Q1.West 2 Q1.L),(Q1.EP Q1.West 3 Q1.L,Q1.EP Q1.East 4 Q1.R),(Q1.EP Q1.West 3 Q1.R,Q1.EP Q1.West 5 Q1.L),
+                      (Q1.EP Q1.West 4 Q1.L,Q1.EP Q1.South 3 Q1.R),(Q1.EP Q1.West 4 Q1.R,Q1.EP Q1.South 2 Q1.L),(Q1.EP Q1.West 5 Q1.L,Q1.EP Q1.West 3 Q1.R),
+                      (Q1.EP Q1.West 5 Q1.R,Q1.EP Q1.East 5 Q1.L),(Q1.EP Q1.West 6 Q1.L,Q1.EP Q1.South 1 Q1.R),(Q1.EP Q1.West 6 Q1.R,Q1.EP Q1.South 1 Q1.L),
+                      (Q1.EP Q1.South 1 Q1.L,Q1.EP Q1.West 6 Q1.R),(Q1.EP Q1.South 1 Q1.R,Q1.EP Q1.West 6 Q1.L),(Q1.EP Q1.South 2 Q1.L,Q1.EP Q1.West 4 Q1.R),
+                      (Q1.EP Q1.South 2 Q1.R,Q1.EP Q1.South 3 Q1.L),(Q1.EP Q1.South 3 Q1.L,Q1.EP Q1.South 2 Q1.R),(Q1.EP Q1.South 3 Q1.R,Q1.EP Q1.West 4 Q1.L),
+                      (Q1.EP Q1.South 4 Q1.L,Q1.EP Q1.South 4 Q1.R),(Q1.EP Q1.South 4 Q1.R,Q1.EP Q1.South 4 Q1.L),(Q1.EP Q1.South 5 Q1.L,Q1.EP Q1.East 5 Q1.R),
+                      (Q1.EP Q1.South 5 Q1.R,Q1.EP Q1.East 6 Q1.L),(Q1.EP Q1.South 6 Q1.L,Q1.EP Q1.East 6 Q1.R),(Q1.EP Q1.South 6 Q1.R,Q1.EP Q1.East 4 Q1.L)]
 
 ----- Test case 8: calcInteractions with size 30 with random atoms to test efficiency
 testCalcInteractions_Size30_RandomAtoms = TestCase $ assertEqual
     "calcInteractions with size 30 with random atoms to test efficiency"
     expectedResult
-    (calcInteractions 30 [(4,5), (8,9), (12,15), (15,20), (17,25), (19,30), (21,35), (23,40), (25,45), (27,50),
+    (Q1.calcInteractions 30 [(4,5), (8,9), (12,15), (15,20), (17,25), (19,30), (21,35), (23,40), (25,45), (27,50),
                           (3,3), (7,7), (11,11), (14,17), (16,23), (18,29), (20,35), (22,41), (24,47), (26,51),
                           (2,1), (6,5), (10,13), (13,19), (15,25), (17,31), (19,36), (21,41), (23,45), (25,49),
                           (1,1), (5,3), (9,11), (12,17), (14,23), (16,29), (18,35), (20,39), (22,43), (24,47),
                           (3,1), (7,5), (11,13), (13,21), (15,27), (17,33), (19,39), (21,43), (23,40), (25,25),
                           (4,3), (8,7), (12,15), (14,23), (16,27), (18,31), (20,27), (22,41), (24,30), (26,26)])
   where
-    expectedResult = [(EP East 1 L,EP East 1 R),(EP East 1 R,EP East 1 L),
-                     (EP East 2 L,EP East 16 R),(EP East 2 R,EP East 3 L),
-                     (EP East 3 L,EP East 2 R),(EP East 3 R,EP East 4 L),
-                     (EP East 4 L,EP East 3 R),(EP East 4 R,EP East 7 L),
-                     (EP East 5 L,EP East 10 R),(EP East 5 R,EP East 8 L),
-                     (EP East 6 L,EP East 13 R),(EP East 6 R,EP East 9 L),
-                     (EP East 7 L,EP East 4 R),(EP East 7 R,EP East 10 L),
-                     (EP East 8 L,EP East 5 R),(EP East 8 R,EP East 11 L),
-                     (EP East 9 L,EP East 6 R),(EP East 9 R,EP East 12 L),
-                     (EP East 10 L,EP East 7 R),(EP East 10 R,EP East 5 L),
-                     (EP East 11 L,EP East 8 R),(EP East 11 R,EP East 13 L),
-                     (EP East 12 L,EP East 9 R),(EP East 12 R,EP East 14 L),
-                     (EP East 13 L,EP East 11 R),(EP East 13 R,EP East 6 L),
-                     (EP East 14 L,EP East 12 R),(EP East 14 R,EP East 15 L),
-                     (EP East 15 L,EP East 14 R),(EP East 15 R,EP East 16 L),
-                     (EP East 16 L,EP East 15 R),(EP East 16 R,EP East 2 L),
-                     (EP East 17 L,EP East 17 R),(EP East 17 R,EP East 17 L),
-                     (EP East 18 L,EP East 18 R),(EP East 18 R,EP East 18 L),
-                     (EP East 19 L,EP West 21 R),(EP East 19 R,EP South 19 L),
-                     (EP East 20 L,EP East 20 R),(EP East 20 R,EP East 20 L),
-                     (EP East 21 L,EP East 21 R),(EP East 21 R,EP East 21 L),
-                     (EP East 22 L,EP East 22 R),(EP East 22 R,EP East 22 L),
-                     (EP East 23 L,EP East 23 R),(EP East 23 R,EP East 23 L),
-                     (EP East 24 L,EP East 24 R),(EP East 24 R,EP East 24 L),
-                     (EP East 25 L,EP East 25 R),(EP East 25 R,EP East 25 L),
-                     (EP East 26 L,EP East 26 R),(EP East 26 R,EP East 26 L),
-                     (EP East 27 L,EP South 29 R),(EP East 27 R,EP South 27 L),
-                     (EP East 28 L,EP West 28 R),(EP East 28 R,EP South 28 L),
-                     (EP East 29 L,EP West 29 R),(EP East 29 R,EP South 29 L),
-                     (EP East 30 L,EP West 30 R),(EP East 30 R,EP South 30 L),
-                     (EP West 1 L,EP West 1 R),(EP West 1 R,EP West 1 L),
-                     (EP West 2 L,EP West 2 R),(EP West 2 R,EP West 2 L),
-                     (EP West 3 L,EP West 3 R),(EP West 3 R,EP West 3 L),
-                     (EP West 4 L,EP West 5 R),(EP West 4 R,EP South 1 L),
-                     (EP West 5 L,EP West 7 R),(EP West 5 R,EP West 4 L),
-                     (EP West 6 L,EP West 11 R),(EP West 6 R,EP South 2 L),
-                     (EP West 7 L,EP West 20 R),(EP West 7 R,EP West 5 L),
-                     (EP West 8 L,EP South 23 R),(EP West 8 R,EP South 3 L),
-                     (EP West 9 L,EP West 19 R),(EP West 9 R,EP South 5 L),
-                     (EP West 10 L,EP South 21 R),(EP West 10 R,EP South 4 L),
-                     (EP West 11 L,EP South 20 R),(EP West 11 R,EP West 6 L),
-                     (EP West 12 L,EP South 19 R),(EP West 12 R,EP South 7 L),
-                     (EP West 13 L,EP West 25 R),(EP West 13 R,EP South 11 L),
-                     (EP West 14 L,EP South 17 R),(EP West 14 R,EP South 6 L),
-                     (EP West 15 L,EP South 16 R),(EP West 15 R,EP South 10 L),
-                     (EP West 16 L,EP South 15 R),(EP West 16 R,EP South 16 L),
-                     (EP West 17 L,EP South 14 R),(EP West 17 R,EP South 12 L),
-                     (EP West 18 L,EP South 13 R),(EP West 18 R,EP South 8 L),
-                     (EP West 19 L,EP South 12 R),(EP West 19 R,EP West 9 L),
-                     (EP West 20 L,EP South 11 R),(EP West 20 R,EP West 7 L),
-                     (EP West 21 L,EP South 10 R),(EP West 21 R,EP East 19 L),
-                     (EP West 22 L,EP South 9 R),(EP West 22 R,EP South 17 L),
-                     (EP West 23 L,EP South 8 R),(EP West 23 R,EP South 20 L),
-                     (EP West 24 L,EP South 7 R),(EP West 24 R,EP South 15 L),
-                     (EP West 25 L,EP South 6 R),(EP West 25 R,EP West 13 L),
-                     (EP West 26 L,EP South 5 R),(EP West 26 R,EP South 13 L),
-                     (EP West 27 L,EP South 4 R),(EP West 27 R,EP South 25 L),
-                     (EP West 28 L,EP South 3 R),(EP West 28 R,EP East 28 L),
-                     (EP West 29 L,EP South 2 R),(EP West 29 R,EP East 29 L),
-                     (EP West 30 L,EP South 1 R),(EP West 30 R,EP East 30 L),
-                     (EP South 1 L,EP West 4 R),(EP South 1 R,EP West 30 L),
-                     (EP South 2 L,EP West 6 R),(EP South 2 R,EP West 29 L),
-                     (EP South 3 L,EP West 8 R),(EP South 3 R,EP West 28 L),
-                     (EP South 4 L,EP West 10 R),(EP South 4 R,EP West 27 L),
-                     (EP South 5 L,EP West 9 R),(EP South 5 R,EP West 26 L),
-                     (EP South 6 L,EP West 14 R),(EP South 6 R,EP West 25 L),
-                     (EP South 7 L,EP West 12 R),(EP South 7 R,EP West 24 L),
-                     (EP South 8 L,EP West 18 R),(EP South 8 R,EP West 23 L),
-                     (EP South 9 L,EP South 25 R),(EP South 9 R,EP West 22 L),
-                     (EP South 10 L,EP West 15 R),(EP South 10 R,EP West 21 L),
-                     (EP South 11 L,EP West 13 R),(EP South 11 R,EP West 20 L),
-                     (EP South 12 L,EP West 17 R),(EP South 12 R,EP West 19 L),
-                     (EP South 13 L,EP West 26 R),(EP South 13 R,EP West 18 L),
-                     (EP South 14 L,EP South 24 R),(EP South 14 R,EP West 17 L),
-                     (EP South 15 L,EP West 24 R),(EP South 15 R,EP West 16 L),
-                     (EP South 16 L,EP West 16 R),(EP South 16 R,EP West 15 L),
-                     (EP South 17 L,EP West 22 R),(EP South 17 R,EP West 14 L),
-                     (EP South 18 L,EP South 27 R),(EP South 18 R,EP South 21 L),
-                     (EP South 19 L,EP East 19 R),(EP South 19 R,EP West 12 L),
-                     (EP South 20 L,EP West 23 R),(EP South 20 R,EP West 11 L),
-                     (EP South 21 L,EP South 18 R),(EP South 21 R,EP West 10 L),
-                     (EP South 22 L,EP South 26 R),(EP South 22 R,EP South 24 L),
-                     (EP South 23 L,EP South 28 R),(EP South 23 R,EP West 8 L),
-                     (EP South 24 L,EP South 22 R),(EP South 24 R,EP South 14 L),
-                     (EP South 25 L,EP West 27 R),(EP South 25 R,EP South 9 L),
-                     (EP South 26 L,EP South 30 R),(EP South 26 R,EP South 22 L),
-                     (EP South 27 L,EP East 27 R),(EP South 27 R,EP South 18 L),
-                     (EP South 28 L,EP East 28 R),(EP South 28 R,EP South 23 L),
-                     (EP South 29 L,EP East 29 R),(EP South 29 R,EP East 27 L),
-                     (EP South 30 L,EP East 30 R),(EP South 30 R,EP South 26 L)]
+    expectedResult = [(Q1.EP Q1.East 1 Q1.L,Q1.EP Q1.East 1 Q1.R),(Q1.EP Q1.East 1 Q1.R,Q1.EP Q1.East 1 Q1.L),
+                     (Q1.EP Q1.East 2 Q1.L,Q1.EP Q1.East 16 Q1.R),(Q1.EP Q1.East 2 Q1.R,Q1.EP Q1.East 3 Q1.L),
+                     (Q1.EP Q1.East 3 Q1.L,Q1.EP Q1.East 2 Q1.R),(Q1.EP Q1.East 3 Q1.R,Q1.EP Q1.East 4 Q1.L),
+                     (Q1.EP Q1.East 4 Q1.L,Q1.EP Q1.East 3 Q1.R),(Q1.EP Q1.East 4 Q1.R,Q1.EP Q1.East 7 Q1.L),
+                     (Q1.EP Q1.East 5 Q1.L,Q1.EP Q1.East 10 Q1.R),(Q1.EP Q1.East 5 Q1.R,Q1.EP Q1.East 8 Q1.L),
+                     (Q1.EP Q1.East 6 Q1.L,Q1.EP Q1.East 13 Q1.R),(Q1.EP Q1.East 6 Q1.R,Q1.EP Q1.East 9 Q1.L),
+                     (Q1.EP Q1.East 7 Q1.L,Q1.EP Q1.East 4 Q1.R),(Q1.EP Q1.East 7 Q1.R,Q1.EP Q1.East 10 Q1.L),
+                     (Q1.EP Q1.East 8 Q1.L,Q1.EP Q1.East 5 Q1.R),(Q1.EP Q1.East 8 Q1.R,Q1.EP Q1.East 11 Q1.L),
+                     (Q1.EP Q1.East 9 Q1.L,Q1.EP Q1.East 6 Q1.R),(Q1.EP Q1.East 9 Q1.R,Q1.EP Q1.East 12 Q1.L),
+                     (Q1.EP Q1.East 10 Q1.L,Q1.EP Q1.East 7 Q1.R),(Q1.EP Q1.East 10 Q1.R,Q1.EP Q1.East 5 Q1.L),
+                     (Q1.EP Q1.East 11 Q1.L,Q1.EP Q1.East 8 Q1.R),(Q1.EP Q1.East 11 Q1.R,Q1.EP Q1.East 13 Q1.L),
+                     (Q1.EP Q1.East 12 Q1.L,Q1.EP Q1.East 9 Q1.R),(Q1.EP Q1.East 12 Q1.R,Q1.EP Q1.East 14 Q1.L),
+                     (Q1.EP Q1.East 13 Q1.L,Q1.EP Q1.East 11 Q1.R),(Q1.EP Q1.East 13 Q1.R,Q1.EP Q1.East 6 Q1.L),
+                     (Q1.EP Q1.East 14 Q1.L,Q1.EP Q1.East 12 Q1.R),(Q1.EP Q1.East 14 Q1.R,Q1.EP Q1.East 15 Q1.L),
+                     (Q1.EP Q1.East 15 Q1.L,Q1.EP Q1.East 14 Q1.R),(Q1.EP Q1.East 15 Q1.R,Q1.EP Q1.East 16 Q1.L),
+                     (Q1.EP Q1.East 16 Q1.L,Q1.EP Q1.East 15 Q1.R),(Q1.EP Q1.East 16 Q1.R,Q1.EP Q1.East 2 Q1.L),
+                     (Q1.EP Q1.East 17 Q1.L,Q1.EP Q1.East 17 Q1.R),(Q1.EP Q1.East 17 Q1.R,Q1.EP Q1.East 17 Q1.L),
+                     (Q1.EP Q1.East 18 Q1.L,Q1.EP Q1.East 18 Q1.R),(Q1.EP Q1.East 18 Q1.R,Q1.EP Q1.East 18 Q1.L),
+                     (Q1.EP Q1.East 19 Q1.L,Q1.EP Q1.West 21 Q1.R),(Q1.EP Q1.East 19 Q1.R,Q1.EP Q1.South 19 Q1.L),
+                     (Q1.EP Q1.East 20 Q1.L,Q1.EP Q1.East 20 Q1.R),(Q1.EP Q1.East 20 Q1.R,Q1.EP Q1.East 20 Q1.L),
+                     (Q1.EP Q1.East 21 Q1.L,Q1.EP Q1.East 21 Q1.R),(Q1.EP Q1.East 21 Q1.R,Q1.EP Q1.East 21 Q1.L),
+                     (Q1.EP Q1.East 22 Q1.L,Q1.EP Q1.East 22 Q1.R),(Q1.EP Q1.East 22 Q1.R,Q1.EP Q1.East 22 Q1.L),
+                     (Q1.EP Q1.East 23 Q1.L,Q1.EP Q1.East 23 Q1.R),(Q1.EP Q1.East 23 Q1.R,Q1.EP Q1.East 23 Q1.L),
+                     (Q1.EP Q1.East 24 Q1.L,Q1.EP Q1.East 24 Q1.R),(Q1.EP Q1.East 24 Q1.R,Q1.EP Q1.East 24 Q1.L),
+                     (Q1.EP Q1.East 25 Q1.L,Q1.EP Q1.East 25 Q1.R),(Q1.EP Q1.East 25 Q1.R,Q1.EP Q1.East 25 Q1.L),
+                     (Q1.EP Q1.East 26 Q1.L,Q1.EP Q1.East 26 Q1.R),(Q1.EP Q1.East 26 Q1.R,Q1.EP Q1.East 26 Q1.L),
+                     (Q1.EP Q1.East 27 Q1.L,Q1.EP Q1.South 29 Q1.R),(Q1.EP Q1.East 27 Q1.R,Q1.EP Q1.South 27 Q1.L),
+                     (Q1.EP Q1.East 28 Q1.L,Q1.EP Q1.West 28 Q1.R),(Q1.EP Q1.East 28 Q1.R,Q1.EP Q1.South 28 Q1.L),
+                     (Q1.EP Q1.East 29 Q1.L,Q1.EP Q1.West 29 Q1.R),(Q1.EP Q1.East 29 Q1.R,Q1.EP Q1.South 29 Q1.L),
+                     (Q1.EP Q1.East 30 Q1.L,Q1.EP Q1.West 30 Q1.R),(Q1.EP Q1.East 30 Q1.R,Q1.EP Q1.South 30 Q1.L),
+                     (Q1.EP Q1.West 1 Q1.L,Q1.EP Q1.West 1 Q1.R),(Q1.EP Q1.West 1 Q1.R,Q1.EP Q1.West 1 Q1.L),
+                     (Q1.EP Q1.West 2 Q1.L,Q1.EP Q1.West 2 Q1.R),(Q1.EP Q1.West 2 Q1.R,Q1.EP Q1.West 2 Q1.L),
+                     (Q1.EP Q1.West 3 Q1.L,Q1.EP Q1.West 3 Q1.R),(Q1.EP Q1.West 3 Q1.R,Q1.EP Q1.West 3 Q1.L),
+                     (Q1.EP Q1.West 4 Q1.L,Q1.EP Q1.West 5 Q1.R),(Q1.EP Q1.West 4 Q1.R,Q1.EP Q1.South 1 Q1.L),
+                     (Q1.EP Q1.West 5 Q1.L,Q1.EP Q1.West 7 Q1.R),(Q1.EP Q1.West 5 Q1.R,Q1.EP Q1.West 4 Q1.L),
+                     (Q1.EP Q1.West 6 Q1.L,Q1.EP Q1.West 11 Q1.R),(Q1.EP Q1.West 6 Q1.R,Q1.EP Q1.South 2 Q1.L),
+                     (Q1.EP Q1.West 7 Q1.L,Q1.EP Q1.West 20 Q1.R),(Q1.EP Q1.West 7 Q1.R,Q1.EP Q1.West 5 Q1.L),
+                     (Q1.EP Q1.West 8 Q1.L,Q1.EP Q1.South 23 Q1.R),(Q1.EP Q1.West 8 Q1.R,Q1.EP Q1.South 3 Q1.L),
+                     (Q1.EP Q1.West 9 Q1.L,Q1.EP Q1.West 19 Q1.R),(Q1.EP Q1.West 9 Q1.R,Q1.EP Q1.South 5 Q1.L),
+                     (Q1.EP Q1.West 10 Q1.L,Q1.EP Q1.South 21 Q1.R),(Q1.EP Q1.West 10 Q1.R,Q1.EP Q1.South 4 Q1.L),
+                     (Q1.EP Q1.West 11 Q1.L,Q1.EP Q1.South 20 Q1.R),(Q1.EP Q1.West 11 Q1.R,Q1.EP Q1.West 6 Q1.L),
+                     (Q1.EP Q1.West 12 Q1.L,Q1.EP Q1.South 19 Q1.R),(Q1.EP Q1.West 12 Q1.R,Q1.EP Q1.South 7 Q1.L),
+                     (Q1.EP Q1.West 13 Q1.L,Q1.EP Q1.West 25 Q1.R),(Q1.EP Q1.West 13 Q1.R,Q1.EP Q1.South 11 Q1.L),
+                     (Q1.EP Q1.West 14 Q1.L,Q1.EP Q1.South 17 Q1.R),(Q1.EP Q1.West 14 Q1.R,Q1.EP Q1.South 6 Q1.L),
+                     (Q1.EP Q1.West 15 Q1.L,Q1.EP Q1.South 16 Q1.R),(Q1.EP Q1.West 15 Q1.R,Q1.EP Q1.South 10 Q1.L),
+                     (Q1.EP Q1.West 16 Q1.L,Q1.EP Q1.South 15 Q1.R),(Q1.EP Q1.West 16 Q1.R,Q1.EP Q1.South 16 Q1.L),
+                     (Q1.EP Q1.West 17 Q1.L,Q1.EP Q1.South 14 Q1.R),(Q1.EP Q1.West 17 Q1.R,Q1.EP Q1.South 12 Q1.L),
+                     (Q1.EP Q1.West 18 Q1.L,Q1.EP Q1.South 13 Q1.R),(Q1.EP Q1.West 18 Q1.R,Q1.EP Q1.South 8 Q1.L),
+                     (Q1.EP Q1.West 19 Q1.L,Q1.EP Q1.South 12 Q1.R),(Q1.EP Q1.West 19 Q1.R,Q1.EP Q1.West 9 Q1.L),
+                     (Q1.EP Q1.West 20 Q1.L,Q1.EP Q1.South 11 Q1.R),(Q1.EP Q1.West 20 Q1.R,Q1.EP Q1.West 7 Q1.L),
+                     (Q1.EP Q1.West 21 Q1.L,Q1.EP Q1.South 10 Q1.R),(Q1.EP Q1.West 21 Q1.R,Q1.EP Q1.East 19 Q1.L),
+                     (Q1.EP Q1.West 22 Q1.L,Q1.EP Q1.South 9 Q1.R),(Q1.EP Q1.West 22 Q1.R,Q1.EP Q1.South 17 Q1.L),
+                     (Q1.EP Q1.West 23 Q1.L,Q1.EP Q1.South 8 Q1.R),(Q1.EP Q1.West 23 Q1.R,Q1.EP Q1.South 20 Q1.L),
+                     (Q1.EP Q1.West 24 Q1.L,Q1.EP Q1.South 7 Q1.R),(Q1.EP Q1.West 24 Q1.R,Q1.EP Q1.South 15 Q1.L),
+                     (Q1.EP Q1.West 25 Q1.L,Q1.EP Q1.South 6 Q1.R),(Q1.EP Q1.West 25 Q1.R,Q1.EP Q1.West 13 Q1.L),
+                     (Q1.EP Q1.West 26 Q1.L,Q1.EP Q1.South 5 Q1.R),(Q1.EP Q1.West 26 Q1.R,Q1.EP Q1.South 13 Q1.L),
+                     (Q1.EP Q1.West 27 Q1.L,Q1.EP Q1.South 4 Q1.R),(Q1.EP Q1.West 27 Q1.R,Q1.EP Q1.South 25 Q1.L),
+                     (Q1.EP Q1.West 28 Q1.L,Q1.EP Q1.South 3 Q1.R),(Q1.EP Q1.West 28 Q1.R,Q1.EP Q1.East 28 Q1.L),
+                     (Q1.EP Q1.West 29 Q1.L,Q1.EP Q1.South 2 Q1.R),(Q1.EP Q1.West 29 Q1.R,Q1.EP Q1.East 29 Q1.L),
+                     (Q1.EP Q1.West 30 Q1.L,Q1.EP Q1.South 1 Q1.R),(Q1.EP Q1.West 30 Q1.R,Q1.EP Q1.East 30 Q1.L),
+                     (Q1.EP Q1.South 1 Q1.L,Q1.EP Q1.West 4 Q1.R),(Q1.EP Q1.South 1 Q1.R,Q1.EP Q1.West 30 Q1.L),
+                     (Q1.EP Q1.South 2 Q1.L,Q1.EP Q1.West 6 Q1.R),(Q1.EP Q1.South 2 Q1.R,Q1.EP Q1.West 29 Q1.L),
+                     (Q1.EP Q1.South 3 Q1.L,Q1.EP Q1.West 8 Q1.R),(Q1.EP Q1.South 3 Q1.R,Q1.EP Q1.West 28 Q1.L),
+                     (Q1.EP Q1.South 4 Q1.L,Q1.EP Q1.West 10 Q1.R),(Q1.EP Q1.South 4 Q1.R,Q1.EP Q1.West 27 Q1.L),
+                     (Q1.EP Q1.South 5 Q1.L,Q1.EP Q1.West 9 Q1.R),(Q1.EP Q1.South 5 Q1.R,Q1.EP Q1.West 26 Q1.L),
+                     (Q1.EP Q1.South 6 Q1.L,Q1.EP Q1.West 14 Q1.R),(Q1.EP Q1.South 6 Q1.R,Q1.EP Q1.West 25 Q1.L),
+                     (Q1.EP Q1.South 7 Q1.L,Q1.EP Q1.West 12 Q1.R),(Q1.EP Q1.South 7 Q1.R,Q1.EP Q1.West 24 Q1.L),
+                     (Q1.EP Q1.South 8 Q1.L,Q1.EP Q1.West 18 Q1.R),(Q1.EP Q1.South 8 Q1.R,Q1.EP Q1.West 23 Q1.L),
+                     (Q1.EP Q1.South 9 Q1.L,Q1.EP Q1.South 25 Q1.R),(Q1.EP Q1.South 9 Q1.R,Q1.EP Q1.West 22 Q1.L),
+                     (Q1.EP Q1.South 10 Q1.L,Q1.EP Q1.West 15 Q1.R),(Q1.EP Q1.South 10 Q1.R,Q1.EP Q1.West 21 Q1.L),
+                     (Q1.EP Q1.South 11 Q1.L,Q1.EP Q1.West 13 Q1.R),(Q1.EP Q1.South 11 Q1.R,Q1.EP Q1.West 20 Q1.L),
+                     (Q1.EP Q1.South 12 Q1.L,Q1.EP Q1.West 17 Q1.R),(Q1.EP Q1.South 12 Q1.R,Q1.EP Q1.West 19 Q1.L),
+                     (Q1.EP Q1.South 13 Q1.L,Q1.EP Q1.West 26 Q1.R),(Q1.EP Q1.South 13 Q1.R,Q1.EP Q1.West 18 Q1.L),
+                     (Q1.EP Q1.South 14 Q1.L,Q1.EP Q1.South 24 Q1.R),(Q1.EP Q1.South 14 Q1.R,Q1.EP Q1.West 17 Q1.L),
+                     (Q1.EP Q1.South 15 Q1.L,Q1.EP Q1.West 24 Q1.R),(Q1.EP Q1.South 15 Q1.R,Q1.EP Q1.West 16 Q1.L),
+                     (Q1.EP Q1.South 16 Q1.L,Q1.EP Q1.West 16 Q1.R),(Q1.EP Q1.South 16 Q1.R,Q1.EP Q1.West 15 Q1.L),
+                     (Q1.EP Q1.South 17 Q1.L,Q1.EP Q1.West 22 Q1.R),(Q1.EP Q1.South 17 Q1.R,Q1.EP Q1.West 14 Q1.L),
+                     (Q1.EP Q1.South 18 Q1.L,Q1.EP Q1.South 27 Q1.R),(Q1.EP Q1.South 18 Q1.R,Q1.EP Q1.South 21 Q1.L),
+                     (Q1.EP Q1.South 19 Q1.L,Q1.EP Q1.East 19 Q1.R),(Q1.EP Q1.South 19 Q1.R,Q1.EP Q1.West 12 Q1.L),
+                     (Q1.EP Q1.South 20 Q1.L,Q1.EP Q1.West 23 Q1.R),(Q1.EP Q1.South 20 Q1.R,Q1.EP Q1.West 11 Q1.L),
+                     (Q1.EP Q1.South 21 Q1.L,Q1.EP Q1.South 18 Q1.R),(Q1.EP Q1.South 21 Q1.R,Q1.EP Q1.West 10 Q1.L),
+                     (Q1.EP Q1.South 22 Q1.L,Q1.EP Q1.South 26 Q1.R),(Q1.EP Q1.South 22 Q1.R,Q1.EP Q1.South 24 Q1.L),
+                     (Q1.EP Q1.South 23 Q1.L,Q1.EP Q1.South 28 Q1.R),(Q1.EP Q1.South 23 Q1.R,Q1.EP Q1.West 8 Q1.L),
+                     (Q1.EP Q1.South 24 Q1.L,Q1.EP Q1.South 22 Q1.R),(Q1.EP Q1.South 24 Q1.R,Q1.EP Q1.South 14 Q1.L),
+                     (Q1.EP Q1.South 25 Q1.L,Q1.EP Q1.West 27 Q1.R),(Q1.EP Q1.South 25 Q1.R,Q1.EP Q1.South 9 Q1.L),
+                     (Q1.EP Q1.South 26 Q1.L,Q1.EP Q1.South 30 Q1.R),(Q1.EP Q1.South 26 Q1.R,Q1.EP Q1.South 22 Q1.L),
+                     (Q1.EP Q1.South 27 Q1.L,Q1.EP Q1.East 27 Q1.R),(Q1.EP Q1.South 27 Q1.R,Q1.EP Q1.South 18 Q1.L),
+                     (Q1.EP Q1.South 28 Q1.L,Q1.EP Q1.East 28 Q1.R),(Q1.EP Q1.South 28 Q1.R,Q1.EP Q1.South 23 Q1.L),
+                     (Q1.EP Q1.South 29 Q1.L,Q1.EP Q1.East 29 Q1.R),(Q1.EP Q1.South 29 Q1.R,Q1.EP Q1.East 27 Q1.L),
+                     (Q1.EP Q1.South 30 Q1.L,Q1.EP Q1.East 30 Q1.R),(Q1.EP Q1.South 30 Q1.R,Q1.EP Q1.South 26 Q1.L)]
 
 
 
 -- Q2
-
-
+testSolveTBB_case1 = TestCase $ assertEqual
+    "check base case"
+    expectedResult
+    (solveTBB 4 [(EP East 1 L,EP West 1 R),(EP East 1 R,EP East 5 L),(EP East 2 L,EP West 2 R),(EP East 2 R,EP East 4 L),(EP East 3 L,EP West 3 R),(EP East 3 R,EP South 3 L),(EP East 4 L,EP East 2 R),(EP East 4 R,EP East 6 L),(EP East 5 L,EP East 1 R),(EP East 5 R,EP South 5 L),(EP East 6 L,EP East 4 R),(EP East 6 R,EP West 2 L),(EP East 7 L,EP West 7 R),(EP East 7 R,EP South 7 L),(EP East 8 L,EP South 7 R),(EP East 8 R,EP South 8 L),(EP West 1 L,EP South 8 R),(EP West 1 R,EP East 1 L),(EP West 2 L,EP East 6 R),(EP West 2 R,EP East 2 L),(EP West 3 L,EP West 4 R),(EP West 3 R,EP East 3 L),(EP West 4 L,EP South 5 R),(EP West 4 R,EP West 3 L),(EP West 5 L,EP West 5 R),(EP West 5 R,EP West 5 L),(EP West 6 L,EP South 3 R),(EP West 6 R,EP South 2 L),(EP West 7 L,EP South 2 R),(EP West 7 R,EP East 7 L),(EP West 8 L,EP South 1 R),(EP West 8 R,EP South 6 L),(EP South 1 L,EP South 4 R),(EP South 1 R,EP West 8 L),(EP South 2 L,EP West 6 R),(EP South 2 R,EP West 7 L),(EP South 3 L,EP East 3 R),(EP South 3 R,EP West 6 L),(EP South 4 L,EP South 6 R),(EP South 4 R,EP South 1 L),(EP South 5 L,EP East 5 R),(EP South 5 R,EP West 4 L),(EP South 6 L,EP West 8 R),(EP South 6 R,EP South 4 L),(EP South 7 L,EP East 7 R),(EP South 7 R,EP East 8 L),(EP South 8 L,EP East 8 R),(EP South 8 R,EP West 1 L)])
+  where
+    expectedResult = [(4,3),(5,1),(6,7),(8,12)]
 -- Q3
 {- 
     Techniques:
@@ -465,14 +481,113 @@ testParseLamMacro_FreeVariables = TestCase $ assertEqual
 {-
     Techniques:
         - Check if the code obey these rules:
-            - Rule: [[ x ]] = λ κ → (κ x)
-            - [[ X ]] = X for macros
+            - [[ x ]] = λ κ → (κ x)
             - [[ λx → E ]] = λκ → (κ λx → [[ E ]])
             - [[ (E1 E2) ]] = λκ → ( [[ E1 ]]  λf → ( [[ E2 ]]  λe → (f e κ) ) )
+            - [[ def X = E in ME ]]  = def X = [[ E ]]  in  [[ ME ]]
+            - [[ X ]] = X 
 -}
+
+----- Test case 1 [[ x ]] = λ κ →  (κ x):
+testCpsTransform_Rule_1 = TestCase $ assertEqual
+    "check [[ x ]] = λ κ →  (κ x)"
+    expectedResult
+    (Q5.cpsTransform (Q5.LamDef [] (Q5.LamVar 1)))
+  where
+    expectedResult = Q5.LamDef [] (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 1)))
+
+----- Test case 2 [[ λx → E ]] = λκ → (κ λx → [[ E ]]):
+testCpsTransform_Rule_2 = TestCase $ assertEqual
+    "check [[ λx → E ]] = λκ → (κ λx → [[ E ]])"
+    expectedResult
+    (Q5.cpsTransform (Q5.LamDef [] (Q5.LamAbs 1 (Q5.LamAbs 2 (Q5.LamVar 1)))))
+  where
+    expectedResult = Q5.LamDef [] (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 1 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 2 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 1)))))))))
+
+----- Test case 3 [[ (E1 E2) ]] = λκ → ( [[ E1 ]]  λf → ( [[ E2 ]]  λe → (f e κ) ) ):
+testCpsTransform_Rule_3 = TestCase $ assertEqual
+    "check [[ (E1 E2) ]] = λκ → ( [[ E1 ]]  λf → ( [[ E2 ]]  λe → (f e κ) ) )"
+    expectedResult
+    (Q5.cpsTransform (Q5.LamDef [] (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 3))))
+  where
+    expectedResult = Q5.LamDef [] (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 1))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 2))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0))))))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 3))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0)))))))
+
+----- Test case 4 [[ def X = E in ME ]]  = def X = [[ E ]]  in  [[ ME ]]
+testCpsTransform_Rule_4 = TestCase $ assertEqual
+    "check [[ def X = E in ME ]]  = def X = [[ E ]]  in  [[ ME ]]"
+    expectedResult
+    (Q5.cpsTransform (Q5.LamDef [] (Q5.LamVar 1)))
+  where
+    expectedResult = Q5.LamDef [] (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 1)))
+
+----- Test case 5 [[ X ]] = X
+testCpsTransform_Rule_5 = TestCase $ assertEqual
+    "check [[ X ]] = X"
+    expectedResult
+    (Q5.cpsTransform (Q5.LamDef [("X", Q5.LamVar 1)] (Q5.LamMacro "X")))
+  where
+    expectedResult = Q5.LamDef [("X",Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 1)))] (Q5.LamMacro "X")
+
+----- Test case 6 Combined rules
+testCpsTransform_Rules_Combined = TestCase $ assertEqual
+    "check combined rules"
+    expectedResult
+    (Q5.cpsTransform (Q5.cpsTransform (Q5.LamDef [("A", Q5.LamAbs 1 (Q5.LamVar 2)), ("B", Q5.LamApp (Q5.LamMacro "A") (Q5.LamMacro "C")), ("C", Q5.LamAbs 3 (Q5.LamApp (Q5.LamMacro "A") (Q5.LamVar 3)))] (Q5.LamAbs 4 (Q5.LamApp (Q5.LamAbs 5 (Q5.LamApp (Q5.LamMacro "B") (Q5.LamVar 4))) (Q5.LamMacro "C"))))))
+  where
+    expectedResult = Q5.LamDef [("A",Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 0 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 0))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 1 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 0 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 0))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 2))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0))))))))))))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0)))))))))),("B",Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 0 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamMacro "A") (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 1 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamMacro "C") (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 2 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 1))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 2))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0))))))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 0))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0)))))))))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0)))))))))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0)))))))))),("C",Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 0 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 0))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 3 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 0 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamMacro "A") (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 1 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 0 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 0))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 3))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0)))))))))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 2 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 1))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 2))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0))))))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 0))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0)))))))))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0)))))))))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0))))))))))))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0))))))))))] (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 0 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 0))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 4 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 0 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 0 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 0))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 5 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 0 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamMacro "B") (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 1 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 0 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 0))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 4))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0)))))))))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 2 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 1))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 2))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0))))))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 0))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0)))))))))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0)))))))))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0))))))))))))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0)))))))))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 1 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamMacro "C") (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamAbs 2 (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 1))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 2))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0))))))) (Q5.LamAbs 1 (Q5.LamApp (Q5.LamAbs 0 (Q5.LamApp (Q5.LamVar 0) (Q5.LamVar 0))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0)))))))))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0)))))))))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0))))))))))))) (Q5.LamAbs 2 (Q5.LamApp (Q5.LamApp (Q5.LamVar 1) (Q5.LamVar 2)) (Q5.LamVar 0))))))))))
+
 
 -- Q6
 {-
     Techniques:
+        - Use provided test cases
 -}
 
+testCompareInnerOuter_1 = TestCase $ assertEqual
+    "test case 1"
+    expectedResult
+    (compareInnerOuter (LamDef [] (LamAbs 1 (LamApp (LamVar 1) (LamVar 2)))) 10)
+  where
+    expectedResult = (Just 0,Just 0,Just 6,Just 6)
+
+testCompareInnerOuter_2 = TestCase $ assertEqual
+    "test case 2"
+    expectedResult
+    (compareInnerOuter (LamDef [ ("F",LamAbs 1 (LamVar 1)) ] (LamMacro "F")) 10)
+  where
+    expectedResult = (Just 1,Just 1,Just 3,Just 3)
+
+testCompareInnerOuter_3 = TestCase $ assertEqual
+    "test case 3"
+    expectedResult
+    (compareInnerOuter (LamDef [] ( LamApp (LamAbs 1 (LamVar 1)) (LamAbs 2 (LamVar 2)))) 10)
+  where
+    expectedResult = (Just 1,Just 1,Just 8,Just 8)
+
+testCompareInnerOuter_4 = TestCase $ assertEqual
+    "test case 4"
+    expectedResult
+    (compareInnerOuter (LamDef [] (LamApp (LamAbs 1 (LamApp (LamVar 1) (LamVar 1))) (LamAbs 1 (LamApp (LamVar 1) (LamVar 1))))) 100)
+  where
+    expectedResult = (Nothing,Nothing,Nothing,Nothing)
+
+testCompareInnerOuter_5 = TestCase $ assertEqual
+    "test case 5"
+    expectedResult
+    (compareInnerOuter (LamDef [ ("ID",LamAbs 1 (LamVar 1)) , ("FST",LamAbs 1 (LamAbs 2 (LamVar 1))) ] ( LamApp (LamApp (LamMacro "FST") (LamVar 3)) (LamApp (LamMacro "ID") (LamVar 4)))) 30)
+  where
+    expectedResult = (Just 4,Just 4,Just 22,Just 22)
+
+testCompareInnerOuter_6 = TestCase $ assertEqual
+    "test case 6"
+    expectedResult
+    (compareInnerOuter (LamDef [ ("FST", LamAbs 1 (LamAbs 2 (LamVar 1)) ) ]  ( LamApp (LamApp (LamMacro "FST") (LamVar 3)) (LamApp (LamAbs 1 (LamVar 1)) (LamVar 4)))) 30)
+  where
+    expectedResult = (Just 4,Just 3,Just 21,Just 21)
+
+testCompareInnerOuter_7 = TestCase $ assertEqual
+    "test case 7"
+    expectedResult
+    (compareInnerOuter (LamDef [ ("ID",LamAbs 1 (LamVar 1)) , ("SND",LamAbs 1 (LamAbs 2 (LamVar 2))) ]  (LamApp (LamApp (LamMacro "SND") (LamApp (LamAbs 1 (LamApp (LamVar 1) (LamVar 1))) (LamAbs 1 (LamApp (LamVar 1) (LamVar 1)))) ) (LamMacro "ID") ) ) 1000)
+  where
+    expectedResult = (Nothing,Just 4,Nothing,Nothing)
