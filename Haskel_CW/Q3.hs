@@ -1,7 +1,7 @@
 {-|
   Module      : COMP2209 Q3
   Copyright   : (c) 2025 University of Southampton
-  Author      : Sze Long Cheung, Karso
+  Author      : Karso Cheung
   Description : 
   
   Write a function that accepts an Abstract Syntax Tree representing an expression of the lambda with macro definitions 
