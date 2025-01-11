@@ -1,7 +1,7 @@
 {-|
-  Module      : COMP2209
+  Module      : COMP2209 Q1
   Copyright   : (c) 2025 University of Southampton
-  Author      : Sze Long Cheung, Karso 
+  Author      : Karso Cheung 
   Description :
   Write a Haskell function that, given the size of the grid and the location of atoms within a grid, then the function will calculate all possible ray firings
   
@@ -11,8 +11,9 @@
     3, If there's an atom, check if (x, y) is upward triangle (y = odd) or downward triangle (y = even) since they have different reflections 
     4, Change the positions based on the triangle sides
     5, Update the current positions and recurse to step 2
+  
 -}
-module Q1 where 
+-- module Q1 where (for Tests.hs) 
 -- Your imports here
 import qualified Data.Set as Set
 import Data.Set (Set)
@@ -23,12 +24,7 @@ data EdgePoint = EP Face Int EdgeDir deriving (Eq,Show,Ord)
 type Atom = (Int,Int)
 --  DO NOT MODIFY THESE DATATYPES OTHER THAN TO ADD TO THE DERIVING LIST
 
-{-| 
-  Main function to calculate interactions
-  @param size  The size of the grid
-  @param atoms List of atom positions
-  @return List of (entry point, exit point) pairs for each ray
--}
+-- Main function to calculate interactions
 calcInteractions :: Int -> [Atom] -> [(EdgePoint, EdgePoint)]
 calcInteractions size atoms = 
     [(entry, traceRayPath entry (getInitialPosition entry)) | entry <- allEntryPoints]
@@ -39,25 +35,32 @@ calcInteractions size atoms =
                           pos <- [1..size],
                           dir <- [L, R]]
 
-    getInitialPosition :: EdgePoint -> (Int, Int)
+    getInitialPosition :: EdgePoint -> (Int, Int) 
     getInitialPosition (EP face idx dir) = case face of
         South -> (size, (2 * idx) - 1)
         West  -> (idx, 1)
         East  -> (idx, 2 * idx)
 
+    {-
+        Calculate how the ray's position (x,y) should be in after reflection from different faces 
+        - even = downward triangle
+        - odd = upward triangle
+    -}
     calculateNextStep :: EdgePoint -> (Int, Int) -> (Int, Int)
     calculateNextStep (EP face _ dir) (x, y) = 
         case (face, dir) of
-            (West, L)  -> if even y then (x, y+1) else (x+1, y+1)
-            (West, R)  -> (x, y+1)
             (East, L)  -> (x, y-1)
             (East, R)  -> if even y then (x, y-1) else (x+1, y+1)
+            (West, L)  -> if even y then (x, y+1) else (x+1, y+1)
+            (West, R)  -> (x, y+1)
             (South, L) -> if even y then (x-1, y-1) else (x, y+1)
             (South, R) -> if even y then (x-1, y-1) else (x, y-1)
 
+    -- Check if the ray (x,y) is outside the size n triangular black box grid
     isOutsideGrid :: (Int, Int) -> Bool
     isOutsideGrid (x, y) = x < 1 || x > size || y < 1 || y > (2 * x)
 
+    -- A function to give the correct reflections Face when facing upward / downward triangle following the rules (images) provided in the spec
     reflectAtAtom :: EdgePoint -> (Int, Int) -> EdgePoint
     reflectAtAtom (EP f i d) (x, y)
         | even y    = EP (reflectEven f d) i d
@@ -81,14 +84,17 @@ calcInteractions size atoms =
         reflectOdd South L = West
         reflectOdd South R = East
 
+    -- Important on how the ray should reflect when facing the final position 
+    -- (for example if (1,1) is the exit point, then check the face and give the correct reflection based on it)
     calculateExitPoint :: EdgePoint -> (Int, Int) -> EdgePoint
     calculateExitPoint (EP f idx d) (x, y) =
         let exitFace = getExitFace f d
-            newDir = reverseDir d
+            newDir = reverseDir d -- basically (L / R) -> (R / L)
         in if exitFace == South 
            then EP South ((y + 1) `div` 2) newDir
            else EP exitFace x newDir
       where
+        -- A straightforward reflection based on the rules provided from the spec
         getExitFace :: Face -> EdgeDir -> Face
         getExitFace West  L = South
         getExitFace West  R = East
@@ -97,20 +103,33 @@ calcInteractions size atoms =
         getExitFace South L = East
         getExitFace South R = West
 
+        -- (Left / Right) -> (Right / Left)
         reverseDir :: EdgeDir -> EdgeDir
         reverseDir L = R
         reverseDir R = L
 
+    -- Important function to trace the ray position recusively and handle ray reflections off atoms
     traceRayPath :: EdgePoint -> (Int, Int) -> EdgePoint
     traceRayPath ep pos@(x, y)
-        | isOutsideGrid nextPos = calculateExitPoint ep pos
+        | isOutsideGrid nextPos = calculateExitPoint ep pos -- if the next position will be outside the box, then calculate the exit position
+        
+        -- Case 1: if there's an atom at current position:
+        -- 1. Calculate new direction after reflection (ep')
+        -- 2. Calculate next position based on new direction
+        -- 3. Continue tracing from this position with new direction
         | pos `Set.member` atomSet =
             let ep' = reflectAtAtom ep pos
                 nextPos' = calculateNextStep ep' pos
             in traceRayPath ep' nextPos'
+        
+        -- Case 2: if there's an atom at next position:
+        -- 1. Calculate reflection from the next position
+        -- 2. Continue tracing from current position with new direction
         | nextPos `Set.member` atomSet =
             let ep' = reflectAtAtom ep nextPos
             in traceRayPath ep' pos
+            
+        -- Case 3: ray doesn't meet any atoms
         | otherwise = traceRayPath ep nextPos
         where
          nextPos = calculateNextStep ep pos
