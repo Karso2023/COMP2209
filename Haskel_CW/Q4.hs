@@ -1,17 +1,15 @@
 {-|
-  Module      : COMP2209 Lambda Macro Parser
-  Description : Parser for Lambda Expressions with Macro Definitions
+  Module      : COMP2209 Q4
   Copyright   : (c) 2025 University of Southampton
-  Author      : Sze Long Cheung, Karso
+  Author      : Karso Cheung 
+  Description :
+  Write a function parseLamMacro :: String  ->  Maybe LamMacroExpr that accepts a string representing source code of a potential lambda expression.  
+  This function should construct the abstract syntax tree for this expression where possible. 
+  In case the string is not a valid string of the language as given by grammar <ME>, this function should return Nothing. 
+  
 
-  This module implements a parser for lambda expressions with macro definitions.
-  It constructs abstract syntax trees while ensuring:
-    1. Unique macro definitions within terms
-    2. Closed terms in macro definitions (no free variables)
-    3. Whitespace-independent parsing
 -}
-
-module Q4 where
+-- module Q4 where (for Tests.hs)
 -- Your imports here
 import Data.Char (isSpace)
 import qualified Data.Set as Set
@@ -26,19 +24,21 @@ parseLamMacro :: String -> Maybe LamMacroExpr
 parseLamMacro = parse . filter (not . isSpace)
   where
     -- Parse full expression with definitions
+    -- Return Nothing if it doesn't follow the rules mentioned in the spec
     parse s = do
         (defs, expr, rest) <- parseDef s
         guard (null rest)
         return $ LamDef defs expr
 
     -- Handle macro definitions
+     --Macro definitions starting with "def"
     parseDef ('d':'e':'f':s) = do
         (name, '=':s1) <- parseName s
         (expr, s2) <- parseExpr s1
         guard (Set.null $ getFreeVars expr)  -- Check for closed terms
         ('i':'n':s3) <- return s2
         (defs, final, rest) <- parseDef s3
-        guard (name `notElem` map fst defs)  -- Check unique names
+        guard (name `notElem` map fst defs)  -- Make sure macro names are unique
         return ((name, expr):defs, final, rest)
     parseDef s = do
         (expr, rest) <- parseExpr s
@@ -56,10 +56,10 @@ parseLamMacro = parse . filter (not . isSpace)
             Just (next, rest) -> parseApp (LamApp left next) rest
 
     -- Parse basic expressions
-    parseAtom ('(':s) = do
+    parseAtom ('(':s) = do -- Parenthesized expression
         (expr, ')':rest) <- parseExpr s
         return (expr, rest)
-    parseAtom ('λ':'x':s) = do
+    parseAtom ('λ':'x':s) = do 
         (num, '→':rest) <- parseNum s
         (body, s1) <- parseExpr rest
         return (LamAbs num body, s1)
@@ -81,8 +81,9 @@ parseLamMacro = parse . filter (not . isSpace)
         in if null num then Nothing else Just (read num, rest)
 
     -- Calculate free variables in expressions
+    -- Make sure that macro definitions are closed terms
     getFreeVars expr = case expr of
-        LamVar n -> Set.singleton n
-        LamApp e1 e2 -> getFreeVars e1 `Set.union` getFreeVars e2
-        LamAbs n e -> Set.delete n (getFreeVars e)
-        LamMacro _ -> Set.empty
+        LamVar n -> Set.singleton n -- single variable
+        LamApp e1 e2 -> getFreeVars e1 `Set.union` getFreeVars e2 -- union free variables
+        LamAbs n e -> Set.delete n (getFreeVars e) -- delete bound variable
+        LamMacro _ -> Set.empty -- no free variables
