@@ -85,4 +85,11 @@ mkGGraph table = head table'
     - A lambda expression with no free variables is called closed
 -}
 
+funnyMap :: ([a] -> [a]) -> [a] -> [a] -> [([a], [a])]
+funnyMap _ _ [] = []
+funnyMap f n (x:xs) = (f (x:n), n) : funnyMap (f.f) (tail n) xs 
 
+fetch :: (Eq t, Num t) => t -> [a] -> a
+fetch _ [] = error "Empty List"
+fetch 0 (x:_) = x
+fetch n (_:xs) = fetch (n-1) xs 
